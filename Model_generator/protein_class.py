@@ -31,26 +31,47 @@ class protein:
         self.log_frequency_f ,self.log_frequency_r = self.log_frequency_compute()
         
         self.max_log_frequency = self.max_log_frequency_compute()
+
     
     def log_frequency_compute(self,background = True):
+
         y = self.PWM
+
         z = np.zeros((len(y),4))
+
         c = 0
         for x in y:
+
             x = x + self.background_frequency
+
             z[c] = np.log(np.divide(x/np.sum(x),self.background_frequency))
+
             c = c + 1
+
         zr = np.copy(z[::-1])
+
         for i in range(len(zr)):
+            
             zr[i][0], zr[i][1],zr[i][2],zr[i][3]=zr[i][3], zr[i][2],zr[i][1],zr[i][0]
+        
         return z , zr
     
     def max_log_frequency_compute(self,backgound = True):
         y =  self.PWM
+
         z = 0
+        
         for x in y:
+        
             x = x + self.background_frequency
             
             z = z + np.max(np.log(np.divide(x/np.sum(x),self.background_frequency)))
 
         return(z)
+
+    def block_generate(self, DNA_input, concentration_input):
+        
+        PWMf = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_f'),-1),-1)
+        
+        PWMr = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_r'),-1),-1)
+        return mc.DNA_protein_block

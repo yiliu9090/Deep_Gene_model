@@ -1,12 +1,4 @@
 import numpy as np
-import keras 
-import sys, os
-import time
-import h5py
-import pandas as pd
-import matplotlib
-import six
-import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.engine.topology import Layer
 from tensorflow.keras.models import Model,load_model
@@ -47,7 +39,7 @@ class DNA_protein_block(tf.keras.Model):
     
     '''
     def __init__(self, PWM , PWMrc ,max_s, step_size,  concen_input = Input(shape=(None,1,1)),\
-                 DNA = Input(shape=(None,1,1)) , score_cut = 0,\
+                 DNA = Input(shape=(None,4,1)) , score_cut = 0,\
                  adjustment = 0, name = 'Nothing'):
         
         '''
@@ -123,5 +115,4 @@ class DNA_protein_block(tf.keras.Model):
         q = Multiply()([Ko_relu , self.concen_input])
         
         return(q)
-        
         
