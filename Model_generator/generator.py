@@ -35,7 +35,7 @@ class Organism_models:
         
         self.protein = protein
         
-        self.concentrations = concentrations
+        self.concentrations = concentrations_data
         
         self.target = target 
         
@@ -52,7 +52,9 @@ class Organism_models:
         self.constructed_model = False 
     
     '''
-    This is initial data preparations
+    This is data preparations which essentially creates data for the model it
+
+    generates
     '''
     
     def convert(self):
@@ -70,6 +72,7 @@ class Organism_models:
             try:
                 i in 'ACGTNacgtn'
             except wrong_input:
+                
                 print('wrong input')
         
             if i == 'A' or i == 'a':
@@ -111,7 +114,7 @@ class Organism_models:
         del self.protein[x]
         
         
-    def q_model_generation(self):
+    def q_model_generation(self, stacked = True, adjusting = False):
         '''
         This function construct a sequence of model that is just one above the Kenneth Layer
         
@@ -120,18 +123,51 @@ class Organism_models:
         It is up to the user on how to use this model from then on
         
         '''
-        assert(len(protein)>0)
+        assert(len(self.protein)>0)
 
-        DNA_input = Input(shape = (None,4,1))
+        DNA_input = Input(shape = (None,4,1),name = 'DNA_input')
 
-        for prot in protein:
+        concentration_input = []
 
+        results = []
 
+        if not adjusting:
+            '''
+            allow adjustment is later project
+            '''
+            adjust={}
 
+        count = 0
+        for prot in self.protein:
+
+            if not adjusting:
+                '''
+                allow adjustment is later project
+                '''
+                adjust[prot] =0
+
+            concentration_input  = concentration_input +\
+                                     [Input(shape = (None,4,1),name = prot+'_Input')]
+
+            results = results + [self.protein[prot].block_generate(DNA_Input,\
+                                concentration_input[count],score_cut =self.cut_off[prot],\
+                                adjustment =adjust[prot])]
+            count += 1
         
+        Inputs  = [DNA_input] + concentration_input 
+
+        if stacked:
+             results = K.stack(results)
+
+        basic_model = Model(inputs=Inputs, outputs=results)
+
         return(basic_model)
     
     def interaction_model(self):
 
+        '''
+        Later work 
+        '''
+        inter_model = 0
 
         return(inter_model)

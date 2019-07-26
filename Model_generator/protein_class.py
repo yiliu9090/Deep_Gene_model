@@ -69,9 +69,19 @@ class protein:
 
         return(z)
 
-    def block_generate(self, DNA_input, concentration_input):
+    def block_generate(self, DNA_input, concentration_input,score_cut =0,adjustment =0):
         
+        '''
+        Protein block generation essentially allow me to generate blocks of data 
+
+        protein
+        '''
+
         PWMf = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_f'),-1),-1)
         
         PWMr = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_r'),-1),-1)
-        return mc.DNA_protein_block
+        
+        return mc.DNA_protein_block( PWMf , PWMr ,self.max_log_frequency, \
+                 self.footprint,  concen_input = concentration_input,\
+                 DNA = DNA_input , score_cut = score_cut,\
+                 adjustment = adjustment, name = self.name +'_protein_block')

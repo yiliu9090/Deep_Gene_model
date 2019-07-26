@@ -13,11 +13,12 @@ class Positive_lambda(Constraint):
 
     def __init__(self, max_value=5,min_value = 0.5, axis=0):
         self.max_value = max_value
+        self.min_value = min_value
         self.axis = axis
 
     def __call__(self, w):
 
-        w *= K.cast(K.greater_equal(w, min_value), K.floatx())
+        w *= K.cast(K.greater_equal(w, self.min_value), K.floatx())
         norms = K.sqrt(K.sum(K.square(w), axis=self.axis, keepdims=True))
         desired = K.clip(norms, 0, self.max_value)
         w *= (desired / (K.epsilon() + norms))
@@ -80,7 +81,7 @@ class DNA_protein_block(tf.keras.Model):
         
         self.adjustment = adjustment
         
-        super(k_block, self).__init__(name)
+        super(DNA_protein_block, self).__init__(name)
         
         
     def call(self):
