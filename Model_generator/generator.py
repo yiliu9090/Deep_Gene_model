@@ -144,4 +144,11 @@ class Organism_models:
         inter_model = 0
 
         return(inter_model)
+
+    def full_model(self):
+        
+        '''
+        Important later work
+        '''
+        pass 
     

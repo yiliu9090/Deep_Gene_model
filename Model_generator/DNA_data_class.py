@@ -32,10 +32,23 @@ class Organism_data:
     
     def new_protein(self,x,name ='Unknown'):
 
-        aeert(type(x) == type({}))
+        assert(type(x) == type({}))
 
         return Organism_data(DNA = self.DNA, protein_concentration= \
             x, name = name)
+    
+    def update_DNA(self, x):
+
+        assert(type(x) == type('a'))
+
+        self.DNA = x 
+        self.DNA_value = self.convert()
+
+    def update_protein(self,x):
+
+        assert(type(x) == type({}))
+
+        self.protein_concentration = x
     
     def convert(self):
         '''
