@@ -157,6 +157,7 @@ class Organism_models:
         Inputs  = [DNA_input] + concentration_input 
 
         if stacked:
+            
              results = K.stack(results)
 
         basic_model = Model(inputs=Inputs, outputs=results)
