@@ -55,43 +55,12 @@ class Organism_models:
 
     generates
     '''
-    def add_DNA(self,DNA):
+    
+    def training_creation(self):
         pass 
 
-    
-    def convert(self):
-        '''
-        this function converts DNA sequences into the basic 
-        '''
-        
-        n = len(self.DNA)
-        
-        m = np.zeros((n,4))
-    
-        count = 0
-        
-        for i in self.DNA:
-            try:
-                i in 'ACGTNacgtn'
-            except wrong_input:
-                
-                print('wrong input')
-        
-            if i == 'A' or i == 'a':
-                m[count][0] = 1
-            elif i == 'C' or i =='c':
-                m[count][1] = 1
-            elif i == 'G' or i == 'g':
-                m[count][2] = 1
-            elif i == 'T' or i == 't':
-                m[count][3] = 1
-            else:
-                raise wrong_input
-                
-            count = count + 1
-            
-        return(m.reshape((1,n,4,1)))
-    
+    def prediction_creation(self):
+        pass
     '''
     Model Creation and calibration
     '''
