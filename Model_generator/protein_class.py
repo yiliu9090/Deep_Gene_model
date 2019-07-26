@@ -28,6 +28,8 @@ class protein:
         self.background_frequency = background_frequency
         
         self.footprint = PWM.shape()[1]
+
+        self.biological_foot_print = footprint
         
         self.log_frequency_f ,self.log_frequency_r = self.log_frequency_compute()
         

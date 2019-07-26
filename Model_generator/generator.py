@@ -28,14 +28,13 @@ class Organism_models:
     This model is completely run on Python 3 and tensorflow 2.0 
     
     '''
-    def __init__(self, DNA_data = 'ACGT', protein ={} ,concentrations_data = {}
-                ,target={} ,cooperativity = {},protein_interactions ={}
-                ,cut_off = {}, trained_model = None,name='Nothing'):    
-        self.DNA = DNA_data
+    def __init__(self, data =[],protein ={}
+                ,target= 'RNA' ,cooperativity = {},protein_interactions ={}
+                ,cut_off = {}, trained_model = None,name='Nothing'):   
+        
+        self.data_storage = data #Need to consider all the storage problem 
         
         self.protein = protein
-        
-        self.concentrations = concentrations_data
         
         self.target = target 
         
@@ -56,6 +55,9 @@ class Organism_models:
 
     generates
     '''
+    def add_DNA(self,DNA):
+        pass 
+
     
     def convert(self):
         '''
@@ -91,7 +93,7 @@ class Organism_models:
         return(m.reshape((1,n,4,1)))
     
     '''
-    Model Creation
+    Model Creation and calibration
     '''
     
     def add_update_protein(self,x):
@@ -145,6 +147,7 @@ class Organism_models:
                 allow adjustment is later project
                 '''
                 adjust[prot] =0
+            
 
             concentration_input  = concentration_input +\
                                      [Input(shape = (None,4,1),name = prot+'_Input')]
@@ -172,3 +175,4 @@ class Organism_models:
         inter_model = 0
 
         return(inter_model)
+    

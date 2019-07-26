@@ -86,9 +86,9 @@ class DNA_protein_block(tf.keras.Model):
         
     def call(self):
         
-        PMW_Score   = tf.nn.conv2d(self.DNA_input, self.PWM, strides=[1,1,1,1], padding='VALID')
+        PMW_Score   = tf.nn.conv2d(self.DNA, self.PWM, strides=[1,1,1,1], padding='VALID')
         
-        PMWrc_Score = tf.nn.conv2d(self.DNA_input, self.PWMrc, strides=[1,1,1,1], padding='VALID')
+        PMWrc_Score = tf.nn.conv2d(self.DNA, self.PWMrc, strides=[1,1,1,1], padding='VALID')
         
         Indicator_f = K.cast(K.greater(PMW_Score ,self.score_cut),'float32')
         
@@ -100,7 +100,7 @@ class DNA_protein_block(tf.keras.Model):
         
         S_relu_r = Lambda(lambda x:K.relu(x, alpha=0.0, max_value=None, threshold=self.score_cut))(PMWrc_Score)
         
-        S_relu  = Maximum()([PMW_Score, PMWrc_Score])
+        S_relu  = Maximum()([S_relu_f, S_relu_r])
         
         S_i_S_max = Lambda(lambda x: x-self.max_s )(S_relu)
         
