@@ -20,13 +20,14 @@ class protein:
     '''
     def __init__(self,name = 'Nothing',PWM = np.array([0.25,0.25,0.25,0.25]),\
                  background_frequency = np.array([0.25,0.25,0.25,0.25]),footprint = 1):
+        
         self.name = name
         
         self.PWM = PWM
         
         self.background_frequency = background_frequency
         
-        self.footprint = footprint
+        self.footprint = PWM.shape()[1]
         
         self.log_frequency_f ,self.log_frequency_r = self.log_frequency_compute()
         
