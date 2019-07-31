@@ -139,7 +139,7 @@ class Organism_models:
     def interaction_model(self):
 
         '''
-        Later work 
+        Later work for the last part of CNN structure 
         '''
         inter_model = 0
 
