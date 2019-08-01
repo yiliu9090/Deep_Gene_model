@@ -70,10 +70,11 @@ class Organism_models:
         '''
         This is to add or update a protein
         '''
-        
-        assert(type(x) == type(pc.protein))
+        assert(type(x) == type(pc.protein()))
 
         self.protein[x.name] = x
+        
+        self.cut_off[x.name] = 0 #intialize as such
     
     def del_protein(self,x):
 
@@ -121,9 +122,9 @@ class Organism_models:
             concentration_input  = concentration_input +\
                                      [Input(shape = (None,4,1),name = prot+'_Input')]
 
-            results = results + [self.protein[prot].block_generate(DNA_Input,\
+            results = results + [self.protein[prot].block_generate(DNA_input,\
                                 concentration_input[count],score_cut =self.cut_off[prot],\
-                                adjustment =adjust[prot])]
+                                adjustment =adjust[prot]).call()]
             count += 1
         
         Inputs  = [DNA_input] + concentration_input 
@@ -151,4 +152,4 @@ class Organism_models:
         Important later work
         '''
         pass 
-    
+        

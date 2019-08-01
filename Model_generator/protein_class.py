@@ -27,7 +27,7 @@ class protein:
         
         self.background_frequency = background_frequency
         
-        self.footprint = PWM.shape()[1]
+        self.footprint = len(PWM)
 
         self.biological_foot_print = footprint
         
@@ -43,6 +43,7 @@ class protein:
         z = np.zeros((len(y),4))
 
         c = 0
+        
         for x in y:
 
             x = x + self.background_frequency
@@ -87,4 +88,4 @@ class protein:
         return mc.DNA_protein_block( PWMf , PWMr ,self.max_log_frequency, \
                  self.footprint,  concen_input = concentration_input,\
                  DNA = DNA_input , score_cut = score_cut,\
-                 adjustment = adjustment, name = self.name +'_protein_block')
+                 adjustment = adjustment)

@@ -63,8 +63,6 @@ class DNA_protein_block(tf.keras.Model):
         
         '''
         
-        self.name = name
-        
         self.PWM = PWM 
         
         self.PWMrc  = PWMrc
@@ -100,7 +98,7 @@ class DNA_protein_block(tf.keras.Model):
         
         S_relu_r = Lambda(lambda x:K.relu(x, alpha=0.0, max_value=None, threshold=self.score_cut))(PMWrc_Score)
         
-        S_relu  = Maximum()([S_relu_f, S_relu_r])
+        S_relu  = Maximum()([PMW_Score, PMWrc_Score])
         
         S_i_S_max = Lambda(lambda x: x-self.max_s )(S_relu)
         
@@ -113,7 +111,8 @@ class DNA_protein_block(tf.keras.Model):
         
         Ko_relu = ZeroPadding2D(((0,self.step_size + self.adjustment),(0,self.adjustment)))(K_relu)
         
-        q = Multiply()([Ko_relu , self.concen_input])
+        Multiply()([Ko_relu , self.concen_input])
         
-        return(q)
+        return Multiply()([Ko_relu , self.concen_input])
+        
         
