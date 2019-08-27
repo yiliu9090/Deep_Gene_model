@@ -1,6 +1,7 @@
 import model_class as mc
 import protein_class as pc
 import numpy as np
+import pickle
 '''
 This is a DNA_data class structure that allows me to store all the data in a 
 
@@ -12,6 +13,13 @@ class Organism_data:
     DNA data allows to add DNA data and protein data so that they will be 
 
     accepted by the system 
+
+    We need to following functionality:
+
+    1. Store the data 
+    2. Save the data under a pickle file structure.
+    3. Change the data 
+    4. Generate Training data 
     '''
     def __init__(self, DNA = 'ACGT', protein_concentration = {},name = 'Unknown'):
 

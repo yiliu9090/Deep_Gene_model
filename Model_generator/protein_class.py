@@ -29,7 +29,7 @@ class protein:
         
         self.footprint = len(PWM)
 
-        self.biological_foot_print = footprint
+        self.biological_foot_print = footprint #biological footprint is different from the actual footprint
         
         self.log_frequency_f ,self.log_frequency_r = self.log_frequency_compute()
         

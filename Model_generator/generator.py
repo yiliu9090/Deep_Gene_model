@@ -110,6 +110,7 @@ class Organism_models:
             adjust={}
 
         count = 0
+        
         for prot in self.protein:
 
             if not adjusting:
