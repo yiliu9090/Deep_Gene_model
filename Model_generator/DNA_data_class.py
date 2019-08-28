@@ -5,7 +5,7 @@ import pickle
 '''
 This is a DNA_data class structure that allows me to store all the data in a 
 
-DNA_data format. This gives me the luxury to
+DNA_data format. This gives me the luxury to store the data however I want and take them out as I pleased.
 '''
 
 class Organism_data:
@@ -19,10 +19,14 @@ class Organism_data:
     1. Store the data 
     2. Save the data under a pickle file structure.
     3. Change the data 
-    4. Generate Training data 
-    '''
-    def __init__(self, DNA = 'ACGT', protein_concentration = {},name = 'Unknown'):
+    4. Generate Training data for tensorflow to run on 
 
+    '''
+    
+    def __init__(self, DNA = 'ACGT', protein_concentration = {},name = 'Unknown'):
+        '''
+        
+        '''
         self.DNA = DNA
 
         self.DNA_value = self.convert()
@@ -32,7 +36,9 @@ class Organism_data:
         self.name = name
     
     def new_DNA(self,x, name = 'Unknown'):
-
+        '''
+        Allows new DNA to be inplace 
+        '''
         assert(type(x) == type('a'))
 
         return Organism_data(DNA = x, protein_concentration= \

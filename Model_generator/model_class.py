@@ -28,6 +28,10 @@ class Positive_lambda(Constraint):
         return {'max_value': self.max_value,
                 'axis': self.axis}
 
+'''
+First Model class for the initialization of the result
+'''
+
 class DNA_protein_block(tf.keras.Model): 
     '''
     DNA_protein_block should take in different PWM and give out models that allows for PWM to 
@@ -79,8 +83,6 @@ class DNA_protein_block(tf.keras.Model):
         
         self.adjustment = adjustment
         
-        super(DNA_protein_block, self).__init__(name)
-        
         
     def call(self):
         
@@ -110,8 +112,7 @@ class DNA_protein_block(tf.keras.Model):
         K_relu = Multiply()([K_i_m_n,Indicator] )
         
         Ko_relu = ZeroPadding2D(((0,self.step_size + self.adjustment),(0,self.adjustment)))(K_relu)
-        
-        Multiply()([Ko_relu , self.concen_input])
+        print(Ko_relu.eval())
         
         return Multiply()([Ko_relu , self.concen_input])
         

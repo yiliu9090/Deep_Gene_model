@@ -1,13 +1,13 @@
 import numpy as np
 import tensorflow as tf
 from keras.engine.topology import Layer
-from tensorflow.keras.models import Model,load_model
-from tensorflow.keras.layers import Dense, Dropout, Flatten,Conv1D,Conv2D, AveragePooling1D,Input,Multiply,Add, Lambda,Subtract,ZeroPadding2D,multiply,maximum,Maximum
-from tensorflow.keras.optimizers import SGD,Adadelta
-from tensorflow.keras.constraints import Constraint, non_neg,NonNeg
-from tensorflow.keras.initializers import RandomUniform,Constant
-from tensorflow.keras import regularizers
-from tensorflow.keras import backend as K
+from tf.keras.models import Model,load_model
+from tf.keras.layers import Dense, Dropout, Flatten,Conv1D,Conv2D, AveragePooling1D,Input,Multiply,Add, Lambda,Subtract,ZeroPadding2D,multiply,maximum,Maximum
+from tf.keras.optimizers import SGD,Adadelta
+from tf.keras.constraints import Constraint, non_neg,NonNeg
+from tf.keras.initializers import RandomUniform,Constant
+from tf.keras import regularizers
+from tf.keras import backend as K
 import model_class as mc
 
 class protein:
@@ -81,11 +81,20 @@ class protein:
         protein
         '''
 
-        PWMf = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_f'),-1),-1)
+        PWMf = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='tf.float32', name='PWM_'+self.name +'_f'),-1),-1)
         
-        PWMr = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_r'),-1),-1)
+        PWMr = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='tf.float32', name='PWM_'+self.name +'_r'),-1),-1)
         
         return mc.DNA_protein_block( PWMf , PWMr ,self.max_log_frequency, \
                  self.footprint,  concen_input = concentration_input,\
                  DNA = DNA_input , score_cut = score_cut,\
                  adjustment = adjustment)
+    
+    def block_generate_loose(self, DNA_input, concentration_input,score_cut =0,adjustment =0):
+
+        '''
+        block_generate_loose does the same thing as block generate but loose up some approximations
+        '''
+        PWMf = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_f'),-1),-1)
+        
+        PWMr = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_r'),-1),-1)
