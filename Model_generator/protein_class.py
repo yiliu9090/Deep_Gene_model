@@ -81,9 +81,9 @@ class protein:
         protein
         '''
 
-        PWMf = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='tf.float32', name='PWM_'+self.name +'_f'),-1),-1)
+        PWMf = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_f'),-1),-1)
         
-        PWMr = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='tf.float32', name='PWM_'+self.name +'_r'),-1),-1)
+        PWMr = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_r'),-1),-1)
         
         return mc.DNA_protein_block( PWMf , PWMr ,self.max_log_frequency, \
                  self.footprint,  concen_input = concentration_input,\
@@ -95,6 +95,7 @@ class protein:
         '''
         block_generate_loose does the same thing as block generate but loose up some approximations
         '''
-        PWMf = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_f'),-1),-1)
+        PWMf = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_f'),-1),-1)
+
+        PWMr = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_r'),-1),-1)
         
-        PWMr = K.expand_dims(K.expand_dims( K.variable(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_r'),-1),-1)

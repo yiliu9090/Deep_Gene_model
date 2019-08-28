@@ -112,8 +112,80 @@ class DNA_protein_block(tf.keras.Model):
         K_relu = Multiply()([K_i_m_n,Indicator] )
         
         Ko_relu = ZeroPadding2D(((0,self.step_size + self.adjustment),(0,self.adjustment)))(K_relu)
-        print(Ko_relu.eval())
         
         return Multiply()([Ko_relu , self.concen_input])
         
         
+class DNA_protein_block_loose(tf.keras.Model): 
+    '''
+    The proble with precise computation of
+    
+    
+    
+    '''
+    def __init__(self, PWM , PWMrc ,max_s, step_size,  concen_input = Input(shape=(None,1,1)),\
+                 DNA = Input(shape=(None,4,1)) , score_cut = 0,\
+                 adjustment = 0, name = 'Nothing'):
+        
+        '''
+        PWM and PWMrc are in the form 
+        
+        K.expand_dims(K.expand_dims( K.variable(value=PWM, dtype='float64', name='Kernel'),-1),-1)
+        
+        max_s is floating point number
+        
+        concen_input must be of the form Input(shape=(None,1,1))
+        
+        DNA must be of the form Input(shape=(None,4,1))
+        
+        score_cut_off must be a number which represents the number of which we want to 
+        score to be cut off at 0
+        
+        step_size is the number of the size of the PWM (how many base pairs)
+        
+        adjustment is a special adjustment that allows the 
+        
+        '''
+        
+        self.PWM = PWM 
+        
+        self.PWMrc  = PWMrc
+        
+        self.max_s = max_s
+        
+        self.concen_input = concen_input
+        
+        self.DNA = DNA
+        
+        self.score_cut = score_cut
+        
+        self.step_size = step_size
+        
+        self.adjustment = adjustment
+        
+        
+    def call(self):
+        
+        PMW_Score   = tf.nn.conv2d(self.DNA, self.PWM, strides=[1,1,1,1], padding='VALID')
+        
+        PMWrc_Score = tf.nn.conv2d(self.DNA, self.PWMrc, strides=[1,1,1,1], padding='VALID')
+        
+        S_relu  = Maximum()([PMW_Score, PMWrc_Score])
+        
+        S_i_S_max = Lambda(lambda x: x-self.max_s )(S_relu)
+        
+        S_i_S_max_lam = Conv2D(1,kernel_size= 1,padding='valid',use_bias=False,kernel_constraint=\
+                                   Positive_lambda(),kernel_initializer=RandomUniform(minval=0.25, maxval=2,\
+                                                                                      seed=None))(S_i_S_max)
+        K_i_m_n = Lambda(lambda x: K.exp(x))(S_i_S_max_lam)
+
+        K_relu  = Conv2D(1,kernel_size= 1,padding='valid',use_bias=True,\
+                            activation ='relu' ,\
+                            kernel_constraint= NonNeg(),\
+                            kernel_initializer=RandomUniform(minval=0.25, maxval=2,seed=None),\
+                            bias_constraint = NonNeg(),\
+                            bias_initializer=RandomUniform(minval=0, maxval=1,seed=None))(K_i_m_n)
+        
+        Ko_relu = ZeroPadding2D(((0,self.step_size + self.adjustment),(0,self.adjustment)))(K_relu)
+        
+        return Multiply()([Ko_relu , self.concen_input])
