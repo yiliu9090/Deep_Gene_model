@@ -146,7 +146,6 @@ class DNA_protein_block_loose(tf.keras.Model):
         adjustment is a special adjustment that allows the 
         
         '''
-        
         self.PWM = PWM 
         
         self.PWMrc  = PWMrc

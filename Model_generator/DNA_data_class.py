@@ -21,8 +21,10 @@ class Organism_data:
     3. Change the data 
     4. Generate Training data for tensorflow to run on 
 
+    5. Allow for generation of pseudo data to compensate for unknown protein that does not exist or not known
+
     '''
-    
+
     def __init__(self, DNA = 'ACGT', protein_concentration = {},name = 'Unknown'):
         '''
         
