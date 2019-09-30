@@ -118,8 +118,13 @@ class DNA_protein_block(tf.keras.Model):
         
 class DNA_protein_block_loose(tf.keras.Model): 
     '''
-    The proble with precise computation of
+    This is a loose computation of the DNA block with many approximation to many numbers 
     
+    For one, it does not have exact cut off but instead using a moving number for its cut-offs. 
+
+    However, what we gain from this is cleaner code and faster speed in terms of computation. :) 
+
+    This code will be used for computing human genome.
     
     
     '''
@@ -182,9 +187,22 @@ class DNA_protein_block_loose(tf.keras.Model):
                             activation ='relu' ,\
                             kernel_constraint= NonNeg(),\
                             kernel_initializer=RandomUniform(minval=0.25, maxval=2,seed=None),\
-                            bias_constraint = NonNeg(),\
                             bias_initializer=RandomUniform(minval=0, maxval=1,seed=None))(K_i_m_n)
         
         Ko_relu = ZeroPadding2D(((0,self.step_size + self.adjustment),(0,self.adjustment)))(K_relu)
         
         return Multiply()([Ko_relu , self.concen_input])
+
+#We need to construct the Kenneth Class
+
+class K_algorithm(tf.keras.Model):
+
+    '''
+    This is a code for Kenneth's algorithm which is represented as a set of recurrent neural networks.
+    '''
+
+    def __init__(self,bio_):
+
+
+
+
