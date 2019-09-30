@@ -201,7 +201,13 @@ class K_algorithm(tf.keras.Model):
     This is a code for Kenneth's algorithm which is represented as a set of recurrent neural networks.
     '''
 
-    def __init__(self,bio_):
+    def __init__(self,proteins = {},cooperativity = {},bio_size = None):
+
+        '''
+        We need to have proteins
+
+        
+        '''
 
 
 
