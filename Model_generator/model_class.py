@@ -187,7 +187,7 @@ class DNA_protein_block_loose(tf.keras.Model):
                             activation ='relu' ,\
                             kernel_constraint= NonNeg(),\
                             kernel_initializer=RandomUniform(minval=0.25, maxval=2,seed=None),\
-                            bias_initializer=RandomUniform(minval=0, maxval=1,seed=None))(K_i_m_n)
+                            bias_initializer=RandomUniform(minval=-2, maxval=0,seed=None))(K_i_m_n)
         
         Ko_relu = ZeroPadding2D(((0,self.step_size + self.adjustment),(0,self.adjustment)))(K_relu)
         
@@ -201,13 +201,32 @@ class K_algorithm(tf.keras.Model):
     This is a code for Kenneth's algorithm which is represented as a set of recurrent neural networks.
     '''
 
-    def __init__(self,proteins = {},cooperativity = {},bio_size = None):
+    def __init__(self,proteins = {},cooperativity = {},bio_size = {}):
 
         '''
         We need to have proteins
 
-        
+        We need to have cooperativity  
         '''
+        self.proteins = proteins
+
+        self.cooperativity = cooperativity
+
+        self.bio_size = bio_size
+    
+    def call(self):
+
+        '''
+        Need to edit the dynamic programming algorithm to make it work.
+
+        The key is to have a shift in the movement
+
+
+
+
+        '''
+
+
 
 
 
