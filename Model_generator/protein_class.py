@@ -98,4 +98,8 @@ class protein:
         PWMf = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_f'),-1),-1)
 
         PWMr = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype='float32', name='PWM_'+self.name +'_r'),-1),-1)
-        
+                
+        return mc.DNA_protein_block_loose( PWMf , PWMr ,self.max_log_frequency, \
+                 self.footprint,  concen_input = concentration_input,\
+                 DNA = DNA_input , score_cut = score_cut,\
+                 adjustment = adjustment)

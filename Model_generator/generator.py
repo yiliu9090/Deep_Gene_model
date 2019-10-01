@@ -55,7 +55,14 @@ class Organism_models:
 
     generates
     '''
+    def check(self):
+        
+        pass 
     
+    def protein_checks(self):
+
+        pass
+
     def training_creation(self):
         pass 
 
