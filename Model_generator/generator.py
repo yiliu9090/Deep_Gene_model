@@ -35,6 +35,10 @@ class Organism_models:
         self.data_storage = data #Need to consider all the storage problem 
         
         self.protein = protein #protein is a dictionary of protein with name as the key and the class of protein as the item
+
+        '''
+        protein class is needed
+        '''
         
         self.target = target #target is the name of 'RNA'
         
@@ -44,26 +48,44 @@ class Organism_models:
 
         At the moment, only activators, quenchers, coactivators and coquenchers are accepted.
         '''
-        self.cooperativity = cooperativity #p
+        self.cooperativity = cooperativity #protein cooperativity
+        '''
+        {'bcd': 60}
+
+        This means that bcd is cooperative with itself 
+        '''
         
         self.cut_off = cut_off
+
+        '''
+        This is a cut-off dictionary for the cut-off level {'bcd':0}
+
+        '''
         
         self.trained_model = trained_model
+
+        '''
+        This is allows me to save the trained model in the system
+        '''
         
-        self.name = name
+        self.name = name #This is a string which denotes the name 
         
         self.constructed_model = False 
     
     '''
-    This is data preparations which essentially creates data for the model it
-
-    generates
+    This is data preparations which essentially creates data for the model it generates
     '''
     def check(self):
         '''
         This code is make sure that things are checked for errors.
         '''
         assert(type(self.protein) == type({}))
+        if self.protein_interactions != {}:
+            for i in self.protein_interactions:
+                assert(i)
+            pass
+
+
         
         pass 
     

@@ -1,13 +1,13 @@
 import numpy as np
 import tensorflow as tf
 from keras.engine.topology import Layer
-from tf.keras.models import Model,load_model
-from tf.keras.layers import Dense, Dropout, Flatten,Conv1D,Conv2D, AveragePooling1D,Input,Multiply,Add, Lambda,Subtract,ZeroPadding2D,multiply,maximum,Maximum
-from tf.keras.optimizers import SGD,Adadelta
-from tf.keras.constraints import Constraint, non_neg,NonNeg
-from tf.keras.initializers import RandomUniform,Constant
-from tf.keras import regularizers
-from tf.keras import backend as K
+from tensorflow.keras.models import Model,load_model
+from tensorflow.keras.layers import Dense, Dropout, Flatten,Conv1D,Conv2D, AveragePooling1D,Input,Multiply,Add, Lambda,Subtract,ZeroPadding2D,multiply,maximum,Maximum
+from tensorflow.keras.optimizers import SGD,Adadelta
+from tensorflow.keras.constraints import Constraint, non_neg,NonNeg
+from tensorflow.keras.initializers import RandomUniform,Constant
+from tensorflow.keras import regularizers
+from tensorflow.keras import backend as K
 import model_class as mc
 
 class protein:
