@@ -34,13 +34,17 @@ class Organism_models:
         
         self.data_storage = data #Need to consider all the storage problem 
         
-        self.protein = protein
+        self.protein = protein #protein is a dictionary of protein with name as the key and the class of protein as the item
         
-        self.target = target 
+        self.target = target #target is the name of 'RNA'
         
-        self.protein_interactions = protein_interactions
-        
-        self.cooperativity = cooperativity
+        self.protein_interactions = protein_interactions #protein interations is a dictionary of the following form 
+        '''
+        {'activators':{proteins:['bcd','cad'],range:[150]},'quenchers':{['Hb'],range:[150]},'coactivators':{'bcd':'Hb','cad':'Hb','range':[150]},'coquencher':{}}
+
+        At the moment, only activators, quenchers, coactivators and coquenchers are accepted.
+        '''
+        self.cooperativity = cooperativity #p
         
         self.cut_off = cut_off
         
@@ -56,6 +60,10 @@ class Organism_models:
     generates
     '''
     def check(self):
+        '''
+        This code is make sure that things are checked for errors.
+        '''
+        assert(type(self.protein) == type({}))
         
         pass 
     
