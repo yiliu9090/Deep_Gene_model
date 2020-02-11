@@ -58,6 +58,7 @@ class Organism_data:
         assert(type(x) == type('a'))
 
         self.DNA = x 
+        
         self.DNA_value = self.convert()
 
     def update_protein(self,x):
