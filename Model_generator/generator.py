@@ -29,7 +29,7 @@ class Organism_models:
     
     '''
     def __init__(self, data =[],protein ={}
-                ,target= 'RNA' ,cooperativity = {},protein_interactions ={}
+                ,target_name= 'RNA' ,cooperativity = {},protein_interactions ={}
                 ,cut_off = {}, trained_model = None,name='Nothing'):   
         
         self.data_storage = data #Need to consider all the storage problem 
@@ -40,7 +40,7 @@ class Organism_models:
         protein class is needed
         '''
         
-        self.target = target #target is the name of 'RNA'
+        self.target_name = target_name #target is the name of 'RNA'
         
         self.protein_interactions = protein_interactions #protein interations is a dictionary of the following form 
         '''

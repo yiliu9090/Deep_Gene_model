@@ -1,5 +1,8 @@
 # Deep Gene model
- Generate the Deep Gene Model 
+## Introduction: 
+Deep Gene is a coding project that I want to embark on for large scale computational study of 
+
+
 
 
  This code tries to generate the Deep Gene Model from 
