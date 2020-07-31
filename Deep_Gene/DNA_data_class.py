@@ -11,6 +11,8 @@ DNA_data format. This gives me the luxury to store the data however I want and t
 class Organism_data:
     
     '''
+    version 0.1.0
+    
     Organism_data is the class that is before the final step to the full training data. It is both a function class 
     for specific functions and a data class of storage of information. 
 
@@ -35,13 +37,13 @@ class Organism_data:
         '''
         self.DNA = DNA
 
-        self.DNA_value = self.convert_DNA()
-
         self.Protein_concentration = Protein_concentration
 
         self.name = name_of_organism
         
         self.DNA_length = len(self.DNA)
+        
+        self.DNA_value = self.convert_DNA()
         
         self.protein_checks()
         
@@ -53,7 +55,7 @@ class Organism_data:
         for all the protein the have the same length.
         
         '''
-        if Protein_concentration == {}: #No cell data at all 
+        if self.Protein_concentration == {}: #No cell data at all 
             
             print('Warning: No Cells data') # No cell data 
             
@@ -65,9 +67,9 @@ class Organism_data:
             
             cell_len_list = []
             
-            for i in Protein_concentration:
+            for i in self.Protein_concentration:
                 
-                cell_list.append(Protein_concentration[i].shape(0))
+                cell_len_list.append(self.Protein_concentration[i].shape[0])
                 
             if max(cell_len_list)== min(cell_len_list):
                 
@@ -120,7 +122,23 @@ class Organism_data:
         self.Protein_concentration = new_protein
         
         self.protein_checks()
+    
+    def Bases_to_indices(self, base):
+        '''
+        A simple function to turn bases ACGT to indices 0123
         
+        This follows from the concept of simple functions where each function only do one thing
+        '''
+        if base == 'A' or base == 'a':
+            return(0)
+        elif base == 'C' or base == 'c':
+            return(1)
+        elif base == 'G' or base == 'g':
+            return(2)
+        elif base == 'T' or base == 't':
+            return(3)
+        else: 
+            print('Warning, Bases not of the ACGT')
     
     def convert_DNA(self):
         
@@ -128,39 +146,99 @@ class Organism_data:
         this function converts DNA sequences into the basic numpy array for training
         '''
         
-        n = len(self.DNA)
-        
-        m = np.zeros((n,4))
+        m = np.zeros((self.DNA_length ,4))
     
-        count = 0
         
-        for i in self.DNA:
-        
-            if i == 'A' or i == 'a':
-                m[count][0] = 1
-            elif i == 'C' or i =='c':
-                m[count][1] = 1
-            elif i == 'G' or i == 'g':
-                m[count][2] = 1
-            elif i == 'T' or i == 't':
-                m[count][3] = 1
-            else:
-                raise wrong_input
-                
-            count = count + 1
+        for i in range(self.DNA_length):
             
-        return(m.reshape((1,n,4,1)))
+            m[i][self.Bases_to_indices(self.DNA[i])] = 1 #Bases_to_indices() is suppose to find the index
+            
+        return(m.reshape((1,self.DNA_length,4,1))) #Return tensorflow accepted format
     
-    def training_data_build(Name_of_target_protein, list_of_tfs):
+    def training_data_build(self, Name_of_target_protein, list_of_tfs, mode = ''):
         '''
         This function builds the training data from the Organism.
+        
+        The output should look like this 
+        
+        [[[DNA, TF_concentration1....], protein_level], [[DNA, TF_concentration1....], protein_level]]...]
+        
+        [DNA, TF_concentration1....]:= X_data 
+        
+        protein_level:= Y_data 
+        
+        @param Name_of_target_protein: str of Name of target protein
+        @param list_of_tfs: list of str
+        
         '''
         
-        pass
+        try:
+            self.Protein_concentration[Name_of_target_protein]
+        except:
+            print('Error, protein not found')
+        
+        for i in list_of_tfs: #First check that all TF is stored
+            
+            try: 
+                    
+                self.Protein_concentration[i]
+                    
+            except: 
+                    
+                print('Error, protein not found')
+                    
+        output_data = []
+        
+        for cell in range(self.No_of_cells):
+        
+            X_data = [self.DNA_value] #Dependent variable 
+        
+            for i in list_of_tfs: 
+            
+                X_data.append(np.ones((1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                #Add the new data to the method
+            
+            output_data.append([X_data, self.Protein_concentration[Name_of_target_protein][cell] ])
+        
+        return(output_data)
+        
     
-    def test_data_build(list_of_tfs):
+    def test_data_build(self,list_of_tfs, mode = ''):
         '''
         This function builds the test data from the Organism
-        '''
         
-        pass
+        The output should look like this 
+        
+        [[[DNA, TF_concentration1....], protein_level], [[DNA, TF_concentration1....], protein_level]]...]
+        
+        [DNA, TF_concentration1....]:= X_data 
+        
+        protein_level:= Y_data 
+        
+        @param list_of_tfs: list of str
+        
+        '''
+        for i in list_of_tfs: #First check that all TF is stored
+            
+            try: 
+                    
+                self.Protein_concentration[i]
+                    
+            except: 
+                    
+                print('Error, protein not found')
+                    
+        output_data = []
+        
+        for cell in range(self.No_of_cells):
+        
+            X_data = [self.DNA_value] #Dependent variable 
+        
+            for i in list_of_tfs: 
+            
+                X_data.append(np.ones((1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                #Add the new data to the method
+            
+            output_data.append(X_data)
+        
+        return(output_data)
