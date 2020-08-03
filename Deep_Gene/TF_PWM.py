@@ -8,7 +8,6 @@ from tensorflow.keras.constraints import Constraint, non_neg,NonNeg
 from tensorflow.keras.initializers import RandomUniform,Constant
 from tensorflow.keras import regularizers
 from tensorflow.keras import backend as K
-import model_class as mc
 
 class protein:
     '''
