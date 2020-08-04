@@ -7,7 +7,6 @@ This is a DNA_data class structure that allows me to store all the data in a
 
 DNA_data format. This gives me the luxury to store the data however I want and take them out as I pleased.
 '''
-
 class Organism_data:
     
     '''
@@ -153,7 +152,7 @@ class Organism_data:
             
             m[i][self.Bases_to_indices(self.DNA[i])] = 1 #Bases_to_indices() is suppose to find the index
             
-        return(m.reshape((1,self.DNA_length,4,1))) #Return tensorflow accepted format
+        return(m.reshape((1,1,self.DNA_length,4,1))) #Return tensorflow accepted format
     
     def training_data_build(self, Name_of_target_protein, list_of_tfs, mode = ''):
         '''
@@ -195,7 +194,7 @@ class Organism_data:
         
             for i in list_of_tfs: 
             
-                X_data.append(np.ones((1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                X_data.append(np.ones((1,1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
                 #Add the new data to the method
             
             output_data.append([X_data, self.Protein_concentration[Name_of_target_protein][cell] ])
@@ -236,7 +235,7 @@ class Organism_data:
         
             for i in list_of_tfs: 
             
-                X_data.append(np.ones((1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                X_data.append(np.ones((1,1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
                 #Add the new data to the method
             
             output_data.append(X_data)
