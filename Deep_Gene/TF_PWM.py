@@ -102,11 +102,9 @@ class TF_PWM:
         Protein block generation generates 
         '''
 
-        PWMf = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, \
-                                                                   dtype=dtypes, name='PWM_'+self.name +'_f'),-1),-1)
+        PWMf = tf.constant(self.log_frequency_f.reshape((self.footprint,4,1,1)), dtype=dtypes)
         
-        PWMr = tf.expand_dims(tf.expand_dims( tf.convert_to_tensor(value=self.log_frequency_f, dtype=dtypes, \
-                                                                   name='PWM_'+self.name +'_r'),-1),-1)
+        PWMr = tf.constant(self.log_frequency_r.reshape((self.footprint,4,1,1)), dtype=dtypes)
         
                 
         return PWMf, PWMr
