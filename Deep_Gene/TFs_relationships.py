@@ -52,8 +52,6 @@ class TF_TF_relationship_list:
     This is a list of TF, TF relationship. The functions in the this class is to check and conform kind of relationships
     (i.e. no conflicting relationship)
     
-    
-    
     '''
     def __init__(self, relationships =[], name_of_organism= 'None'):
         
@@ -157,14 +155,14 @@ class TF_TF_relationship_list:
             for j in target:
                 if rtype_is_list:#rtype is a list  
                     
-                    if rtype[count] in self.property_pointer:
-                        new_r = TF_TF_relationship(actor = i, acted =j, name = i+j ,rtype =rtype[count],\
-                                                   properties =self.property_pointer[rtype[count]])
+                    if rtypes[count] in self.property_pointer:
+                        new_r = TF_TF_relationship(actor = i, acted =j, name = i+j ,rtype =rtypes[count],\
+                                                   properties =self.property_pointer[rtypes[count]])
                         self.add_relationship(new_r)
                        
                     else:
 
-                        new_r = TF_TF_relationship(actor = i, acted =j, name = i+j ,rtype =rtype[count], properties = {})
+                        new_r = TF_TF_relationship(actor = i, acted =j, name = i+j ,rtype =rtypes[count], properties = {})
                         self.add_relationship(new_r)
                        
                     count = count + 1
@@ -228,7 +226,7 @@ class TF_TF_relationship_list:
         '''
         Currently I have no idea how to implement this in a sensible way.
         '''
-        allowed_roles = ['quenching', 'coactivation']
+        #allowed_roles = ['quenching', 'coactivation']
         pass
         
     
