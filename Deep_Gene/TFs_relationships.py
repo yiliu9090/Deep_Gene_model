@@ -41,7 +41,7 @@ class TF_TF_relationship:
         self.rtype = new_type
         
     def update_property(self, new_property):
-        self.properties = new_properties
+        self.properties = new_property
         
     def add_functional_pointer(self, functional):
         self.functional= functional
