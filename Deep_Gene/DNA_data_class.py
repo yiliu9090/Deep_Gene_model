@@ -1,5 +1,3 @@
-import model_class as mc
-import protein_class as pc
 import numpy as np
 import pickle
 '''
@@ -106,11 +104,11 @@ class Organism_data:
     
     def update_DNA(self, new_DNA):
 
-        assert(type(x) == type('a'))
+        assert(type(new_DNA) == type('a'))
 
         self.DNA = new_DNA 
         
-        self.DNA_value = self.convert()
+        self.DNA_value = self.convert_DNA()
         
         self.DNA_length = len(self.DNA)
 

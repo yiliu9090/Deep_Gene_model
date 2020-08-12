@@ -96,10 +96,6 @@ class DNA_protein_block(tf.keras.Model):
 
         Indicator  = Maximum()([Indicator_r, Indicator_f])
         
-        S_relu_f = Lambda(lambda x:K.relu(x, alpha=0.0, max_value=None, threshold=self.score_cut))(PMW_Score)
-        
-        S_relu_r = Lambda(lambda x:K.relu(x, alpha=0.0, max_value=None, threshold=self.score_cut))(PMWrc_Score)
-        
         S_relu  = Maximum()([PMW_Score, PMWrc_Score])
         
         S_i_S_max = Lambda(lambda x: x-self.max_s )(S_relu)
