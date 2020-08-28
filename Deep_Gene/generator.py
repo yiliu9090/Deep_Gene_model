@@ -1,6 +1,3 @@
-import model_class as mc
-import protein_class as pc
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model,load_model
