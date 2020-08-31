@@ -26,7 +26,7 @@ class K_cell(tf.keras.layers.Layer):
     ValueError: Tensor's shape (100, 9, 1) is not compatible with supplied shape [100, 1, 1]
     '''
 
-    def __init__(self, state_size,\
+    def __init__(self,\
                  cooperativity_initial_matrix,\
                  cooperativity_range_matrix, \
                  padding_add_shapes,combine_cooperativity, \
@@ -59,11 +59,14 @@ class K_cell(tf.keras.layers.Layer):
                 saved is going to match the 
         
         '''
+        self.cooperativity_initial_matrix = cooperativity_initial_matrix
+        self.Num_of_cooperativities = tf.shape(cooperativity_initial_matrix).numpy()[0]
         
         self.cooperativity_range_matrix = cooperativity_range_matrix
+        
         self.combine_cooperativity = combine_cooperativity
         self.add_shapes = padding_add_shapes
-        self.cooperativity_initial_matrix = cooperativity_initial_matrix
+        
         self.non_cooperativity_matrix = non_cooperativity_matrix
         self.state_size = [tf.TensorShape((None,)),tf.TensorShape((None,))]
         self.output_size = [tf.TensorShape((9,1)),tf.TensorShape((9,1))]
@@ -81,7 +84,7 @@ class K_cell(tf.keras.layers.Layer):
         '''
         
         
-        self.kernel = self.add_weight(name='kernel',shape=(1,1),
+        self.kernel = self.add_weight(name='kernel',shape=(self.Num_of_cooperativities,1),
                                           initializer=RandomUniform(minval=0, maxval=5, seed=None),
                                           constraint = NonNeg(),
                                           trainable=True,
@@ -106,7 +109,10 @@ class K_cell(tf.keras.layers.Layer):
         
         '''
         Start computing Z Cooperativity ***This feature has not fully realize yet***
+        
+        
         '''
+        print(self.cooperativity_initial_matrix)
         cooperativity_TF = tf.linalg.matmul(self.cooperativity_initial_matrix, current_TF_concentration)
         
         '''
@@ -148,6 +154,7 @@ class K_cell(tf.keras.layers.Layer):
         '''
         In case that a TF cooperatively binds to multiple TF.
         '''
+        print(Zc_individual_cooperativity)
         Zc_by_TF = tf.linalg.matmul(self.combine_cooperativity, Zc_individual_cooperativity)
         
         '''
@@ -213,4 +220,5 @@ class K_cell(tf.keras.layers.Layer):
     
     def get_config(self):
         
-        return {"unit_1": 9, "unit_2": 9, "unit_3": 9}
+        return {}
+    

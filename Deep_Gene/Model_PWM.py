@@ -11,17 +11,13 @@ from tensorflow.keras import backend as K
 
 class Positive_lambda(Constraint):
 
-    def __init__(self, max_value=5,min_value = 0.5, axis=0):
+    def __init__(self, max_value=5,min_value = 0.5):
         self.max_value = max_value
         self.min_value = min_value
-        self.axis = axis
 
     def __call__(self, w):
 
-        w *= K.cast(K.greater_equal(w, self.min_value), K.floatx())
-        norms = K.sqrt(K.sum(K.square(w), axis=self.axis, keepdims=True))
-        desired = K.clip(norms, 0, self.max_value)
-        w *= (desired / (K.epsilon() + norms))
+        w = tf.clip_by_value(w, self.min_value, self.max_value, name=None)
         return w
 
     def get_config(self):
@@ -32,82 +28,61 @@ class Positive_lambda(Constraint):
 First Model class for the initialization of the result
 '''
 
-class DNA_protein_block(tf.keras.Model): 
+class PWM_Layer_strict(tf.keras.layers.Layer):
     '''
-    DNA_protein_block should take in different PWM and give out models that allows for PWM to 
     
-    take place i.e. something like a model that can be used for further construction
+    PWM_Layer_strict follows from Liu, et.(2020), The focus is to use this code is to construct with relative accuracy 
     
-    This is a giant building block that allows the user to build on in the future. 
-    
-    
-    
+    the PWM site identification model in Liu, et. (2020)
     '''
-    def __init__(self, PWM , PWMrc ,max_s, step_size,  concen_input = Input(shape=(None,1,1)),\
-                 DNA = Input(shape=(None,4,1)) , score_cut = 0,\
-                 adjustment = 0, name = 'Nothing'):
+    def __init__(self, PWM, PWMrc, max_s,score_cut, adjustment,dtype_now,  **kwargs ):
         
         '''
-        PWM and PWMrc are in the form 
-        
-        K.expand_dims(K.expand_dims( K.variable(value=PWM, dtype='float64', name='Kernel'),-1),-1)
-        
-        max_s is floating point number
-        
-        concen_input must be of the form Input(shape=(None,1,1))
-        
-        DNA must be of the form Input(shape=(None,4,1))
-        
-        score_cut_off must be a number which represents the number of which we want to 
-        score to be cut off at 0
-        
-        step_size is the number of the size of the PWM (how many base pairs)
-        
-        adjustment is a special adjustment that allows the 
-        
+        This is an interesting problem
         '''
         
-        self.PWM = PWM 
-        
-        self.PWMrc  = PWMrc
-        
-        self.max_s = max_s
-        
-        self.concen_input = concen_input
-        
-        self.DNA = DNA
-        
+        self.PWM  = PWM
+        self.PWMrc = PWMrc
+        self.max_s =  max_s
         self.score_cut = score_cut
-        
-        self.step_size = step_size
-        
         self.adjustment = adjustment
+        self.paddings = tf.constant([[0,0],[0, 0], [self.adjustment[0], self.adjustment[1]], [0, 0],[0, 0]])
+        self.dtype_now = dtype_now
+        
+        super(PWM_Layer_strict, self).__init__( **kwargs )
         
         
-    def call(self):
+    def build(self, input_shapes):
         
-        PMW_Score   = tf.nn.conv2d(self.DNA, self.PWM, strides=[1,1,1,1], padding='VALID')
+        self.kernel = self.add_weight(name='kernel',shape=(1,1,1,1),
+                                          initializer=RandomUniform(minval=0, maxval=1, seed=None),
+                                          trainable=True,
+                                          constraint =Positive_lambda(), 
+                                          dtype=self.dtype_now)
+
+    
+    def call(self, inputs):
         
-        PMWrc_Score = tf.nn.conv2d(self.DNA, self.PWMrc, strides=[1,1,1,1], padding='VALID')
+        PMW_Score   = tf.nn.conv2d(inputs[0], self.PWM, strides=[1,1,1,1], padding='VALID')
         
-        Indicator_f = K.cast(K.greater(PMW_Score ,self.score_cut),'float32')
+        PMWrc_Score = tf.nn.conv2d(inputs[0], self.PWMrc, strides=[1,1,1,1], padding='VALID')
         
-        Indicator_r = K.cast(K.greater(PMWrc_Score ,self.score_cut),'float32')
+        Indicator_f = K.cast(K.greater(PMW_Score ,self.score_cut),self.dtype_now )
+        
+        Indicator_r = K.cast(K.greater(PMWrc_Score ,self.score_cut),self.dtype_now )
 
         Indicator  = Maximum()([Indicator_r, Indicator_f])
         
         S_relu  = Maximum()([PMW_Score, PMWrc_Score])
         
-        S_i_S_max = Lambda(lambda x: x-self.max_s )(S_relu)
+        S_i_S_max = S_relu-self.max_s
         
-        S_i_S_max_lam = Conv2D(1,kernel_size= 1,padding='valid',use_bias=False,kernel_constraint=\
-                                   Positive_lambda(),kernel_initializer=RandomUniform(minval=0.25, maxval=2,\
-                                                                                      seed=None))(S_i_S_max)
-        K_i_m_n = Lambda(lambda x: K.exp(x))(S_i_S_max_lam)
+        S_i_S_max_lam =  S_i_S_max*self.kernel
         
-        K_relu = Multiply()([K_i_m_n,Indicator] )
+        K_i_m_n = tf.math.exp(S_i_S_max_lam)
         
-        Ko_relu = ZeroPadding2D(((0,self.step_size + self.adjustment),(0,self.adjustment)))(K_relu)
+        K_relu = K_i_m_n*Indicator
         
-        return Multiply()([Ko_relu , self.concen_input])
+        Ko_relu = tf.pad(K_relu ,self.paddings,'CONSTANT')
         
+        return Ko_relu
