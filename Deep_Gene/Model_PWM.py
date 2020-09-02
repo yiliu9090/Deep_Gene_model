@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-from keras.engine.topology import Layer
 from tensorflow.keras.models import Model,load_model
 from tensorflow.keras.layers import Dense, Dropout, Flatten,Conv1D,Conv2D, AveragePooling1D,Input,Multiply,Add, Lambda,Subtract,ZeroPadding2D,multiply,maximum,Maximum
 from tensorflow.keras.optimizers import SGD,Adadelta

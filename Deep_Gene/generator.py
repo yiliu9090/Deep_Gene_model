@@ -1,14 +1,3 @@
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.models import Model,load_model
-
-from tensorflow.keras.layers import Dense, Dropout, Flatten,Conv1D,Conv2D, AveragePooling1D,Input,Multiply,Add, Lambda,Subtract,ZeroPadding2D,multiply,maximum,Maximum
-from tensorflow.keras.optimizers import SGD,Adadelta
-from tensorflow.keras.constraints import Constraint, non_neg,NonNeg
-from tensorflow.keras.initializers import RandomUniform,Constant
-from tensorflow.keras import regularizers
-from tensorflow.keras import backend as K
-
 class Organism_models:
     '''
     This is a organism model structure with functions
