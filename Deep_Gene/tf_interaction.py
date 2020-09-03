@@ -94,7 +94,7 @@ class TF_long_range_interactions(tf.keras.layers.Layer):
         
         self.kernel = self.add_weight(name='kernel',shape=(1,1,self.actors_size,1),
                                           initializer=RandomUniform(minval=0, maxval=1, seed=None),
-                                          trainable=True,
+                                          trainable=True, constraint = NonNeg(),
                                           dtype='float64')
         
     def call(self, inputs):
@@ -104,6 +104,7 @@ class TF_long_range_interactions(tf.keras.layers.Layer):
         
         actors = inputs[:,:,self.actor_indices[0]:self.actor_indices[1],:]
 
-        ef_A = self.sign*K.sum(self.kernel*actors)
+        ef_A = self.sign*tf.math.reduce_sum(self.kernel*actors, axis=1)
         
         return ef_A
+        
