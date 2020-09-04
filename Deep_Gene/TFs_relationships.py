@@ -43,7 +43,7 @@ class TF_TF_relationship:
     def update_property(self, new_property):
         self.properties = new_property
         
-    def add_functional_pointer(self, functional):
+    def add_functional_pointer(self, functional): #add a layer for special needs
         self.functional= functional
 
 class TF_TF_relationship_list:
