@@ -53,18 +53,24 @@ class PWM_Layer_strict(tf.keras.layers.Layer):
         
     def build(self, input_shapes):
         
-        self.kernel = self.add_weight(name='kernel',shape=(1,1,1,1),
+        self.kernel_1 = self.add_weight(name='Lambda',shape=(1,1,1,1),
                                           initializer=RandomUniform(minval=0, maxval=1, seed=None),
                                           trainable=True,
                                           constraint =Positive_lambda(), 
+                                          dtype=self.dtype_now)
+        
+        self.kernel_2 = self.add_weight(name='K',shape=(1,1,1,1),
+                                          initializer=RandomUniform(minval=0, maxval=1, seed=None),
+                                          trainable=True,
+                                          constraint =Positive_lambda(max_value=4,min_value = 0), 
                                           dtype=self.dtype_now)
 
     
     def call(self, inputs):
         
-        PMW_Score   = tf.nn.conv2d(inputs[0], self.PWM, strides=[1,1,1,1], padding='VALID')
+        PMW_Score   = tf.nn.conv2d(inputs, self.PWM, strides=[1,1,1,1], padding='VALID')
         
-        PMWrc_Score = tf.nn.conv2d(inputs[0], self.PWMrc, strides=[1,1,1,1], padding='VALID')
+        PMWrc_Score = tf.nn.conv2d(inputs, self.PWMrc, strides=[1,1,1,1], padding='VALID')
         
         Indicator_f = K.cast(K.greater(PMW_Score ,self.score_cut),self.dtype_now )
         
@@ -76,12 +82,12 @@ class PWM_Layer_strict(tf.keras.layers.Layer):
         
         S_i_S_max = S_relu-self.max_s
         
-        S_i_S_max_lam =  S_i_S_max*self.kernel
+        S_i_S_max_lam =  S_i_S_max*self.kernel_1
         
         K_i_m_n = tf.math.exp(S_i_S_max_lam)
         
         K_relu = K_i_m_n*Indicator
         
-        Ko_relu = tf.pad(K_relu ,self.paddings,'CONSTANT')
+        Ko_relu = tf.pad(K_relu ,self.paddings,'CONSTANT')*self.kernel_2
         
         return Ko_relu

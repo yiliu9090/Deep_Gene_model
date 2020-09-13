@@ -38,10 +38,9 @@ class TF_short_range_interactions(tf.keras.layers.Layer):
         self.interaction_type = interaction_type #accepts 'quenching', 'coactivation'
         self.interaction_kernel = interaction_kernel #for convolution 
         self.padding_left_right = (tf.shape(interaction_kernel).numpy()[0]-1)/2
-        self.actor_indices = actor_indices # (a,b) a beginning and b ending 
-        self.actors_size = actor_indices[1] - actor_indices[0] 
-        self.acted_index = acted_index #one index 
-        
+        self.actor_indices =  tf.constant(actor_indices) # (a,b) a beginning and b ending 
+        self.actors_size = len(actor_indices)
+        self.acted_index = tf.constant(acted_index) #one index 
         super(TF_short_range_interactions, self).__init__(**kwargs)
         
     def build(self,input_shapes):
@@ -59,10 +58,8 @@ class TF_short_range_interactions(tf.keras.layers.Layer):
         '''
         f_{new} =  f_{B} exp(- sum d_i log(1-E_A f_A))
         '''
-        
-        actors = inputs[:,:,self.actor_indices[0]:self.actor_indices[1],:]
-        
-        acted = inputs[:,:,self.acted_index[0]:self.acted_index[1],:]
+        actors = tf.gather(inputs,indices = self.actor_indices , axis = 2)
+        acted  = tf.gather(inputs,indices = self.acted_index ,axis = 2)
 
         ef_A = tf.math.log( 1.0 - self.kernel*actors) 
         
@@ -74,7 +71,8 @@ class TF_short_range_interactions(tf.keras.layers.Layer):
         ef_acted = acted*(1-tf.math.exp(ef_kernel))
         
         return ef_acted
-
+        
+    
 class TF_long_range_interactions(tf.keras.layers.Layer):
     '''
     activation and direct repression
@@ -85,10 +83,11 @@ class TF_long_range_interactions(tf.keras.layers.Layer):
         
         '''
         self.interaction_type = interaction_type #accepts 'quenching', 'coactivation'
-        self.actor_indices = actor_indices # (a,b) a beginning and b ending 
-        self.actors_size = actor_indices[1] - actor_indices[0] 
+        self.actor_indices =  tf.constant(actor_indices) # (a,b) a beginning and b ending 
+        self.actors_size = len(actor_indices)
         self.sign = sign
         super(TF_long_range_interactions, self).__init__(**kwargs)
+        
         
     def build(self,input_shapes):
         
@@ -102,7 +101,7 @@ class TF_long_range_interactions(tf.keras.layers.Layer):
         f_{new} =  f_{B} exp(- sum d_i log(1-E_A f_A))
         '''
         
-        actors = inputs[:,:,self.actor_indices[0]:self.actor_indices[1],:]
+        actors = tf.gather(inputs,indices = self.actor_indices , axis = 2)
 
         ef_A = self.sign*tf.math.reduce_sum(self.kernel*actors, axis=1)
         

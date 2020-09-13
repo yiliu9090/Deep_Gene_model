@@ -24,18 +24,28 @@ class TF_TF_relationship:
     
     '''
     
-    def __init__(self, actor, acted, name ,rtype, properties = {}):
-        self.actor = actor
+    def __init__(self, actors, acted, rtype, output_name =None,input_to = None,properties = {}, name = None):
+        self.actors = actors 
         self.acted = acted
         self.rtype = rtype
         self.name  = name
         self.properties = properties 
+        self.output_name = output_name
+        self.input_to = input_to #another relationships
+        self.default_output_name()
         
-    def update_actor(self, new_actor):
-        self.actor = new_actor
+    def default_output_name(self):
+        if self.output_name is None:
+            self.output_name = self.rtype + '_' + self.acted
+            
+    def next_relationships(self, relationships):
+        self.input_to = relationships
         
-    def update_acted(self, new_acted):
-        self.acted = new_acted
+    def update_actor(self, new_actors):
+        self.actors = new_actors
+        
+    def update_acted(self, new_acteds):
+        self.acteds = new_acteds
         
     def update_type(self, new_type):
         self.rtype = new_type
@@ -43,190 +53,85 @@ class TF_TF_relationship:
     def update_property(self, new_property):
         self.properties = new_property
         
-    def add_functional_pointer(self, functional): #add a layer for special needs
-        self.functional= functional
+    def add_functional_pointer(self, functional, **kwargs):
+        self.functional= functional(**kwargs)
 
 class TF_TF_relationship_list:
     
     '''
-    This is a list of TF, TF relationship. The functions in the this class is to check and conform kind of relationships
-    (i.e. no conflicting relationship)
-    
+    This is a few graphs of relationships, every node should point to a new TF relationship
     '''
     def __init__(self, relationships =[], name_of_organism= 'None'):
         
-        self.relationships = relationships #all the relationships in a list form
+        self.relationships = relationships #list of graphs 
         self.name = name_of_organism #
         self.num_of_relationships = len(relationships)
-        self.organize()
-        self.check()
-        self.property_pointer = {\
-            'cooperativity': {'range_max':60, 'range_min':14},\
+        self.property_pointer = { #use to change property quickly\ 
+            'cooperativity': {'range':60},\
             'activation': {},\
             'repression':{},\
-            'quenching':  {'range_max':150},\
-            'coactivation':{'range_max':150}}                         
+            'quenching':  {'range':100},\
+            'coactivation':{'range':150}}  
+        self.reorder()
         '''
         #This is not public generally but will be improve upon in each updates The reason to use this is to help set up
         a default relationship pointer.
+        '''  
+    def update_property_pointer(self, new_property_pointer):
+        
+        self.property_pointer = new_property_pointer
+        
+    def update_property(self):
+        
+        for i in self.relationships: 
+            if i.rtype in self.property_pointer.keys():
+                i.update_property(self.property_pointer[i.rtype])
+    def reorder(self):
         '''
+        BFS
+        '''
+        explored_list = [] 
+        exploring_list = self.find_initial_relationship()
         
-        
-    def organize(self):
+        while len(exploring_list) !=0:
+            current_node = exploring_list.pop(0)
+            if type(current_node.input_to)== type([]):
+                for i in current_node.input_to:
+                    if i not in explored_list and i not in exploring_list:
+                        exploring_list = exploring_list +[i]
+            elif current_node.input_to == None:
+                exploring_list = exploring_list
+            else:
+                if current_node.input_to not in explored_list and current_node.input_to not in exploring_list:
+                    exploring_list = exploring_list +[current_node]
+            
+            explored_list = explored_list + [current_node]
+            
+        self.relationships = explored_list
+    
+    def find_initial_relationship(self):
         
         '''
-        This is to organize the relationship into different hash tables for easy references.
+        Find initial relationships, that means relationships without any pointers
         '''
-         
-        self.relationship_types = {}
-        self.relationship_actor = {}
-        self.relationship_acted = {}
-        
-        if self.num_of_relationships > 0:
-            '''
-            Cache all the relationships in hash tables to ensure that we can connect all the things together
-            '''
-            for i in range(self.num_of_relationships):
-                
-                rel = self.relationships[i]
-                
-                if rel.rtype not in self.relationship_types:
-                    self.relationship_types[rel.rtype] = [i]
-                else: 
-                    self.relationship_types[rel.rtype].append(i)
-                    
-                if rel.actor not in self.relationship_actor:
-                    self.relationship_actor[rel.actor] = [i]
-                else: 
-                    self.relationship_actor[rel.actor].append(i)
-                    
-                if rel.acted not in self.relationship_acted:
-                    self.relationship_acted[rel.acted] = [i]
+        self.protein_build_list = []
+        #find starting point.
+        initial = [] #initial pointers
+        for i in self.relationships:
+            intialized_pointer = True
+            for j in self.relationships: 
+                if type(j.input_to) == type([]):
+                    for k in j.input_to:
+                        if k == i:
+                            intialized_pointer  = False
                 else:
-                    self.relationship_acted[rel.acted].append(i)
-                    
-    def delete_TF(self, target):
-        '''
-        Delete TF deletes all the relationships associated with those TF. 
-        '''
-        self.delete_actor(target)
-        self.delete_acted(target)
-        self.organize()
-    
+                    if j.input_to ==i:
+                        intialized_pointer = False
+            if intialized_pointer:
+                initial = initial + [i]
         
-    def delete_actor(self, target):
-        '''
-        Delete all the all relationships with target as the actor
-        '''
-        relationship_target_index = self.relationship_actor[target]
-        
-        self.relationships.remove(relationship_target_index)
-        
-        
-    
-    def delete_acted(self, target):
-        '''
-        Delete all the all relationships with target as the acted
-        '''
-        
-        relationship_target_index = self.relationship_acted[target]
-        
-        self.relationships.remove(relationship_target_index)
-        
-    def add_TF_role(self, TF, target, rtypes):
-        '''
-        Add a TF role to the relationship stance
-        
-        Add a class pointer to build a default relationship.
-        
-        '''
-        assert((type(TF) == type([]))\
-                    and (type(target)== type([])))
-               
-        rtype_is_str = True if type(rtypes) == type('r') else  False #A string 
-        rtype_is_list = True if (type(rtypes) == type([]))\
-                    and (len(rtypes) == len(TF)*len(target)) else False
-        
-        assert(rtype_is_str or rtype_is_list)
-        
-        count = 0 #count incase there are multiple 
-        
-        for i in TF:
-            for j in target:
-                if rtype_is_list:#rtype is a list  
-                    
-                    if rtypes[count] in self.property_pointer:
-                        new_r = TF_TF_relationship(actor = i, acted =j, name = i+j ,rtype =rtypes[count],\
-                                                   properties =self.property_pointer[rtypes[count]])
-                        self.add_relationship(new_r)
-                       
-                    else:
-
-                        new_r = TF_TF_relationship(actor = i, acted =j, name = i+j ,rtype =rtypes[count], properties = {})
-                        self.add_relationship(new_r)
-                       
-                    count = count + 1
-                else: #rtype is a str
-                    if rtypes in self.property_pointer:
-                        new_r = TF_TF_relationship(actor = i, acted =j, name = i+j ,rtype =rtypes,\
-                                                   properties =self.property_pointer[rtypes])
-                        self.add_relationship(new_r)
-                       
-                    else:
-                        new_r = TF_TF_relationship(actor = i, acted =j, name = i+j ,rtype =rtypes, properties = {})
-                        self.add_relationship(new_r)
-        self.organize()
-        self.check()
-        
-    
-    def add_relationship(self, relationship):
-        '''
-        Add a relationship into the list
-        '''
-        self.relationships.append(relationship)
-        
-        self.num_of_relationships += 1
-        
-    def check(self):
-        '''
-        
-        This is a function to check relationships 
-        
-        '''
-        self.remove_duplicates()
-        
-    def remove_duplicates(self):
-        '''
-        
-        remove duplicated cases. generally remove only the earlier ones
-        
-        '''
-        
-        remove_indx = []
-        for i in self.relationship_types:
-            
-            type_list = self.relationship_types[i]
-            
-            for j in self.relationship_actor:
-                actor_list = self.relationship_actor[j]
-                for k in self.relationship_acted:
-                    intersections = self.intersection(self.intersection(self.relationship_acted[k],actor_list),type_list)
-                    lst_length = len(intersections)
-                    if lst_length > 1:
-                        remove_indx.append(intersections[:-2])#keep only the last one
-        if remove_indx !=[]:
-            self.relationships.remove(remove_indx)
+        return initial
         
     def intersection(self, lst1, lst2): 
         #Intersections 
         return list(set(lst1) & set(lst2)) 
-    
-    def switching_role(self, target, role_initial, role_to): 
-        
-        '''
-        Currently I have no idea how to implement this in a sensible way.
-        '''
-        #allowed_roles = ['quenching', 'coactivation']
-        pass
-        
-    
