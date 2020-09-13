@@ -106,4 +106,57 @@ class TF_long_range_interactions(tf.keras.layers.Layer):
         ef_A = self.sign*tf.math.reduce_sum(self.kernel*actors, axis=1)
         
         return ef_A
+
+class Enhancer_competition(tf.keras.layers.Layer):
+    '''
+    activation and direct repression
+    '''
+    def __init__(self,interaction_type,\
+                 actor_indices, sign, alpha, **kwargs):
+        '''
         
+        '''
+        self.interaction_type = interaction_type #accepts 'Enhancer_competition'
+        self.actor_indices =  tf.constant(actor_indices) # (a,b) a beginning and b ending 
+        self.actors_size = len(actor_indices)
+        self.sign = tf.constant(sign) 
+        self.alpha = alpha
+        self.cnn_kernel = tf.constant(np.ones((self.alpha,1,1,1)))
+        super(Enhancer_competition, self).__init__(**kwargs)
+        
+        
+    def build(self,input_shapes):
+        
+        self.kernel1 = self.add_weight(name='kernel',shape=(1,1,self.actors_size,1),
+                                          initializer=RandomUniform(minval=0, maxval=1, seed=None),
+                                          trainable=True, constraint = NonNeg(),
+                                          dtype='float64')
+        self.kernel2 = self.add_weight(name='bias',shape=(1,),
+                                          initializer=RandomUniform(minval=0, maxval=1, seed=None),
+                                          trainable=True, constraint = NonNeg(),
+                                          dtype='float64')
+        self.kernel3 = self.add_weight(name='beta',shape=(1,),
+                                          initializer=RandomUniform(minval=0, maxval=1, seed=None),
+                                          trainable=True, constraint = NonNeg(),
+                                          dtype='float64')
+    def call(self, inputs):
+        '''
+        f_{new} =  f_{B} exp(- sum d_i log(1-E_A f_A))
+        '''
+        
+        actors = tf.gather(inputs,indices = self.actor_indices , axis = 2)
+
+        N = tf.math.reduce_sum(self.sign*self.kernel1*actors, axis=2, keepdims=True)
+        
+        N_cnn = tf.nn.conv2d(N,self.cnn_kernel, strides = 1, padding =[[0, 0], [0,0], [0, 0], [0, 0]],\
+                data_format='NHWC', dilations=None, name=None)
+        
+        R_malpha = tf.math.sigmoid(N_cnn - self.kernel2)
+        
+        T_malpha = self.kernel3*N_cnn
+        
+        T = T_malpha/(1 + K.sum(T_malpha))
+        
+        R_total = K.sum(T*R_malpha,keepdims=True) 
+        
+        return R_total        
