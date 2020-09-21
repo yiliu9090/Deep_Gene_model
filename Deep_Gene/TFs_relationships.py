@@ -80,6 +80,7 @@ class TF_TF_relationship_list:
     def update_property_pointer(self, new_property_pointer):
         
         self.property_pointer = new_property_pointer
+        self.update_property()
         
     def update_property(self):
         
