@@ -112,7 +112,7 @@ class K_cell(tf.keras.layers.Layer):
         
         
         '''
-        print(self.cooperativity_initial_matrix)
+
         cooperativity_TF = tf.linalg.matmul(self.cooperativity_initial_matrix, current_TF_concentration)
         
         '''
@@ -137,13 +137,21 @@ class K_cell(tf.keras.layers.Layer):
         ***Currently, this means that the TF actor that have cooperativity must be of same size *** 
         ***since different size will mean that some of rows have to be rolled ***
         ***For that case, write your own ***
+
         At the moment this is true. Because we only deal with bcd
         In the long....long future, it might not be true. 
         As of 8/15/2020, I have sent a request to tensorflow team for help... lets see how it will be dealt with...
+        """
+        tf_a = tf.constant(a)
+        updated_slice = tf.roll(tf_a[1, :], 2, axis=0)
+        tf_b = tf.tensor_scatter_nd_update(tf_a, [[1]], [updated_slice])
+        """
         '''
         '''
         Matrix multiply to get q_(i-j) * Z_{i -(j-m)} use notation in algorithm 1 of 
         https://academic.oup.com/bioinformatics/article/36/Supplement_1/i499/5870526
+
+
         '''
         TF_multiply_Z = tf.linalg.matmul(TF_multiply_add,Z)
         
