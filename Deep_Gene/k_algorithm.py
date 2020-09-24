@@ -198,7 +198,7 @@ class K_cell(tf.keras.layers.Layer):
         '''
         Compute Z
         '''
-        Z_new = Z[-1,-1] + Zc_sum +  Z_nc_sum
+        Z_new = Z[0,0] + Zc_sum +  Z_nc_sum
         '''
         output (Zc, Znc)
         '''
