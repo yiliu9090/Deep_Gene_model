@@ -20,15 +20,16 @@ class Organism_models:
     This is a organism model structure with functions to build the corresponding model
     
     '''
-    def __init__(self, proteins, relationships, data, target):   
+    def __init__(self, proteins, relationships, target):   
         
         self.proteins = proteins 
         self.relationships = relationships
-        self.data = data
         self.target = target
         self.check_and_standardize_protein()
         self.check_relationships()
         self.cooperativity_checks()
+        self.model_built = False
+        self.model_compiled =False
         
     def check_and_standardize_protein(self):
         '''
@@ -129,9 +130,10 @@ class Organism_models:
         
     def standardize_protein(self):
         self.protein_adjustments = {}
-        min_protein_size = min(list(self.protein_footprint.values())) 
         for i in self.protein_footprint.keys():
-            self.protein_adjustments[i] = [0 , self.protein_footprint[i] - min_protein_size]
+            self.protein_adjustments[i] = [0,self.protein_footprint[i]-1]
+    
+        
             
                     
                 
@@ -155,7 +157,15 @@ class Organism_models:
         self.build_padding_add_shapes()
         self.build_combine_cooperativity()
         self.build_non_cooperativity()
+        self.protein_cooperativity_adjustments()
         
+    def protein_cooperativity_adjustments(self):
+        self.protein_cooperativity_adjustments_value = {}
+        self.min_protein_size = min(list(self.protein_footprint.values())) 
+        for i in self.protein_footprint.keys():
+            self.protein_cooperativity_adjustments_value[i] = self.protein_footprint[i]-self.min_protein_size
+        self.max_cooperativity_adjustments = max(list(self.protein_cooperativity_adjustments_value.values()))
+
         
     def print_cooperativity_matrices(self):
         
@@ -236,6 +246,7 @@ class Organism_models:
         Build model code using exec
         
         '''
+        tf.keras.backend.set_floatx("float64")
         self.check_relationships()
         
         
@@ -246,6 +257,7 @@ class Organism_models:
         
         #setup PWM layer
         for j in self.useful_protein:
+            
             Code_build += j.name + ' = tf.keras.layers.Input(shape=(1,None,1,1))\n'
             protein_order[j.name] = num_protein_track
             num_protein_track += 1
@@ -253,19 +265,54 @@ class Organism_models:
             PWMlayer_code += 'max_s_'+j.name + '= j.max_log_frequency_compute()'
             exec(PWMlayer_code)
             Code_build += j.name + '_PWM_layer '+'= mpwm.PWM_Layer_strict(PWM_'+j.name+' , PWMrc_'+ j.name +\
-            ', max_s_'+j.name + ',0,['+str(self.protein_adjustments[j.name][0])+','+ str(self.protein_adjustments[j.name][1])+'], tf.dtypes.float64)\n'
+            ', max_s_'+j.name + ',0,['+str(self.protein_adjustments[j.name][1])+','+ str(self.protein_adjustments[j.name][0])+'], tf.dtypes.float64)\n'
             Code_build += j.name+'_binding_site_k = '+j.name + '_PWM_layer(DNA)\n'
             Code_build += j.name+'_binding_site = '+j.name + '_binding_site_k*'+j.name+'\n'
+        if self.max_cooperativity_adjustments> 0:
+            Code_build +='coop_pad = tf.constant([[0,0],[0, 0], ['+str(self.max_cooperativity_adjustments)+',' +\
+            str(self.max_cooperativity_adjustments)\
+            +'], [0, 0],[0, 0]])\n'
+            for j in self.useful_protein:
+                Code_build += j.name+'_binding_site = tf.pad('+j.name+'_binding_site ,coop_pad,"CONSTANT")\n'
         
-        #binding data 
-        Code_build += 'binding_data = tf.concat(['
-        for j in self.useful_protein:
-            Code_build += j.name+'_binding_site,'
+        if self.max_cooperativity_adjustments> 0:
+            '''
+            i.e. the footprint are not of the same size then this means that forward and backward runs on 
+            slightly different system.
+            '''
+            
+            Code_build += 'binding_data = tf.concat(['
+            for j in self.useful_protein:
+                Code_build += j.name+'_binding_site,'
         
-        Code_build = Code_build[:-1]
-        Code_build += '],axis = 3, name = "Full_stacked_for_k_algorithm")[:,0,:,:,:]\n'
+            Code_build = Code_build[:-1]
+            Code_build += '],axis = 3, name = "Full_stacked_for_k_algorithm")[:,0,:,:,:]\n'
+            Code_build += 'binding_data_greater = binding_data + 1.0 - K.cast(K.greater(binding_data ,0),tf.dtypes.float64 )\n'
+            Code_build += 'binding_data_back = tf.concat(['
+            
+            for j in self.useful_protein:
+                Code_build += 'tf.roll('+ j.name+'_binding_site,shift =' \
+                + str(-1*self.protein_cooperativity_adjustments_value[j.name])+', axis = 2),'
+            Code_build = Code_build[:-1]
+            Code_build += '],axis = 3, name = "Full_stacked_for_k_algorithm")[:,0,:,:,:]\n'
+            
+            Code_build += 'binding_data_back =tf.reverse(binding_data_back,[1])\n'
+            
+        else:
+            
+            #binding data
+            Code_build += 'binding_data = tf.concat(['
+            for j in self.useful_protein:
+                Code_build += j.name+'_binding_site,'
         
-        Code_build += 'binding_data_greater = binding_data + 1.0 - K.cast(K.greater(binding_data ,0),tf.dtypes.float64 )\n'
+            Code_build = Code_build[:-1]
+            Code_build += '],axis = 3, name = "Full_stacked_for_k_algorithm")[:,0,:,:,:]\n'
+        
+            Code_build += 'binding_data_greater = binding_data + 1.0 - K.cast(K.greater(binding_data ,0),tf.dtypes.float64 )\n'
+            
+            Code_build += 'binding_data_back = tf.reverse(binding_data,[1])\n'
+            
+        
         
         '''
         Build K-cell 
@@ -281,17 +328,39 @@ class Organism_models:
         [tf.ones(('+ str(2*self.cooperativity_max_range -self.max_range )+','+ str(len(self.cooperativity_relationships))+'),dtype = tf.dtypes.float64),\
         tf.zeros(('+ str(len(self.cooperativity_relationships))+','+ str(self.cooperativity_max_range)+'),dtype = tf.dtypes.float64)])\n'
         
-        Code_build += 'f_reverse =K_RNN(inputs =tf.reverse(binding_data,[1]), initial_state =\
+        Code_build += 'f_reverse =K_RNN(inputs =binding_data_back, initial_state =\
         [tf.ones(('+ str(2*self.cooperativity_max_range -self.max_range )+','+ str(len(self.cooperativity_relationships))+'),dtype = tf.dtypes.float64),\
         tf.zeros(('+ str(len(self.cooperativity_relationships))+','+ str(self.cooperativity_max_range)+'),dtype = tf.dtypes.float64)])\n'
         
-        Code_build += 'f_reverse_n = tf.reverse(f_reverse[0][1],[1])\n'
-        Code_build += 'f_reverse_c = tf.reverse(f_reverse[0][0],[1])\n'
-        Code_build += 'f_s = (f_data[0][0]*f_reverse_n+ f_data[0][1]*f_reverse_c + f_data[0][1]*f_reverse_n)/(f_data[1][0]*binding_data_greater)\n'
+        Code_build += 'f_reverse_nold = tf.reverse(f_reverse[0][1],[1])\n'
+        #
+        #
+        if self.max_cooperativity_adjustments> 0:
+            Code_build += 'f_reverse_n = tf.concat(['
+            c = 0
+            for j in self.useful_protein:
+                Code_build += 'tf.expand_dims(tf.roll(f_reverse_nold[:,:,'+str(c)+',:],shift ='\
+                +str(self.protein_cooperativity_adjustments_value[j.name]) +',axis = 1),-1),'
+                c += 1
+            Code_build = Code_build[:-1]
+            Code_build += '],axis = -2, name = "f_n")\n'
+        #
+        #
+        Code_build += 'f_reverse_cold = tf.reverse(f_reverse[0][0],[1])\n'
+        if self.max_cooperativity_adjustments> 0:
+            Code_build += 'f_reverse_c = tf.concat(['
+            c = 0
+            for j in self.useful_protein:
+                Code_build += 'tf.expand_dims(tf.roll(f_reverse_cold[:,:,'+str(c)+',:],shift ='\
+                +str(self.protein_cooperativity_adjustments_value[j.name]) +',axis = 1),-1),'
+                c += 1
+            Code_build = Code_build[:-1]
+            Code_build += '],axis = -2, name = "f_c")\n'
         
+        Code_build += 'f_s = (f_data[0][0]*f_reverse_n+ f_data[0][1]*f_reverse_c + f_data[0][1]*f_reverse_n)/(f_data[1][0]*binding_data_greater)\n'
+        Code_build += 'f_s = tf.clip_by_value(f_s,clip_value_min= 0, clip_value_max = 0.9999999) \n'
         self.protein_position_model = self.protein_positions.copy()
         current_max_value = max(self.protein_position_model.values())
-        num_protein_track += 1 
         for i in self.relationships.relationships: 
             if i.rtype != 'cooperativity':
                 if i.rtype == 'coactivation':
@@ -344,5 +413,81 @@ class Organism_models:
         final_line =final_line[:-1] + '], outputs=output)'
         print(final_line)
         Code_build += final_line
-        print(Code_build)
+        #print(Code_build)
         exec(Code_build)
+        self.model_built = True
+        
+    def build_training_data(self, data):
+        '''
+        training data 
+        '''
+        protein_list = list(self.protein_positions)
+            
+        if type(data)== type([]):
+            
+            training_data = []
+                
+            for i in data:
+                
+                training_data += i.training_data_build(self.target ,protein_list, mode = '')
+        else:
+                
+            training_data = data.training_data_build(self.target ,protein_list, mode = '')
+            
+        return training_data
+        
+    def build_test_data(self, data):
+        '''
+        training data 
+        '''
+        protein_list = list(self.protein_positions)
+            
+        if type(data)== type([]):
+            
+            training_data = []
+                
+            for i in data:
+                
+                training_data += data.test_data_build( protein_list)
+                
+        else:
+            training_data = data.training_data_build(self.target ,protein_list, mode = '')
+            
+        return training_data
+    
+    def compile_model(self,optimizer='rmsprop', loss='mse', metrics = 'mse' ):
+        
+        if not self.model_built:
+            
+            raise NameError('Need to build the model first')
+        
+        else:
+            self.model.compile(optimizer=optimizer, loss=loss, metrics = metrics )
+            
+        self.model_compiled = True
+    
+    def train_model(self, data, epoches, verbose = True):
+        
+        '''
+        data
+        '''
+        if not self.model_compiled:
+            
+            raise NameError('Need to compile model')
+        
+        else: 
+            if type(data) == type(DDC.Organism_data('A',{'bcd':np.zeros(1)})):
+                
+                training_data = self.build_training_data(data)
+            else:
+                training_data = data
+            
+            for i in range(epoches):
+                if verbose:
+                    
+                    print(i)
+                
+                for j in training_data:
+                    
+                    self.model.train_on_batch(x=j[0], y=np.array([[j[1]]]))
+                    
