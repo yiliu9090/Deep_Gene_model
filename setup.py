@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="Deep_Gene-yi_liu", # Replace with your own username
-    version="0.0.1",
+    version="0.1.0",
     author="Yi Liu",
     author_email="yil@uchicago.edu",
     description="Deep Gene Project",
