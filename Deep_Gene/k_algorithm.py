@@ -162,7 +162,7 @@ class K_cell(tf.keras.layers.Layer):
         '''
         In case that a TF cooperatively binds to multiple TF.
         '''
-        print(Zc_individual_cooperativity)
+        #print(Zc_individual_cooperativity)
         Zc_by_TF = tf.linalg.matmul(self.combine_cooperativity, Zc_individual_cooperativity)
         
         '''

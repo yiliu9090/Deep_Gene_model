@@ -435,10 +435,41 @@ class Organism_models:
             training_data = data.training_data_build(self.target ,protein_list, mode = '')
             
         return training_data
+    
+    def build_fit_data(self, data):
+        
+        Data = Trial_organism.build_training_data(data)
+        Y = []
+        X = []
+        if type(data)== type([]):
+            size = len(Data[0].Protein_concentration)
+        else:
+            size = len(Data.Protein_concentration)
+            
+        for i in Data:
+            for j in range(len(i[0])):
+                if len(X)< size:
+                    if j == 0:
+                        X.append([i[0][j][0]])
+                    else:
+                        X.append(i[0][j])
+                else:
+                    if j == 0:
+                
+                        X[j].append(i[0][j][0])
+                    else:
+                        X[j] = np.concatenate((X[j],i[0][j]))
+            Y.append([[i[1]]])
+
+        Y = np.array(Y)
+        for j in range(len(X)):
+            X[j] = np.array(X[j])
+            
+        return X, Y 
         
     def build_test_data(self, data):
         '''
-        training data 
+        build test data for test on batch
         '''
         protein_list = list(self.protein_positions)
             
@@ -491,3 +522,8 @@ class Organism_models:
                     
                     self.model.train_on_batch(x=j[0], y=np.array([[j[1]]]))
                     
+                
+                
+                
+                
+            
