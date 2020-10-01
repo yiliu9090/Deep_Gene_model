@@ -104,11 +104,11 @@ class Organism_data:
     
     def update_DNA(self, new_DNA):
 
-        assert(type(new_DNA) == type('a'))
+        assert(type(x) == type('a'))
 
         self.DNA = new_DNA 
         
-        self.DNA_value = self.convert_DNA()
+        self.DNA_value = self.convert()
         
         self.DNA_length = len(self.DNA)
 
@@ -150,7 +150,7 @@ class Organism_data:
             
             m[i][self.Bases_to_indices(self.DNA[i])] = 1 #Bases_to_indices() is suppose to find the index
             
-        return(m.reshape((1,1,self.DNA_length,4,1))) #Return tensorflow accepted format
+        return(m.reshape((1,self.DNA_length,4,1))) #Return tensorflow accepted format
     
     def training_data_build(self, Name_of_target_protein, list_of_tfs, mode = ''):
         '''
@@ -192,10 +192,12 @@ class Organism_data:
         
             for i in list_of_tfs: 
             
-                X_data.append(np.ones((1,1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                X_data.append(np.ones((1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
                 #Add the new data to the method
             
-            output_data.append([X_data, self.Protein_concentration[Name_of_target_protein][cell] ])
+            output_data.append([X_data, self.Protein_concentration[Name_of_target_protein][cell]/\
+                                np.sum(np.array(self.Protein_concentration[Name_of_target_protein])**2)
+                               ])
         
         return(output_data)
         
@@ -233,7 +235,7 @@ class Organism_data:
         
             for i in list_of_tfs: 
             
-                X_data.append(np.ones((1,1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                X_data.append(np.ones((1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
                 #Add the new data to the method
             
             output_data.append(X_data)
