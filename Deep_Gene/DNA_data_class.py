@@ -152,7 +152,7 @@ class Organism_data:
             
         return(m.reshape((1,self.DNA_length,4,1))) #Return tensorflow accepted format
     
-    def training_data_build(self, Name_of_target_protein, list_of_tfs, mode = ''):
+    def training_data_build(self, Name_of_target_protein, list_of_tfs, max_DNA_length = None, mode = ''):
         '''
         This function builds the training data from the Organism.
         
@@ -188,15 +188,15 @@ class Organism_data:
         
         for cell in range(self.No_of_cells):
         
-            X_data = [self.DNA_value] #Dependent variable 
+            X_data = [np.expand_dims(self.DNA_value,1)] #Dependent variable 
         
             for i in list_of_tfs: 
             
-                X_data.append(np.ones((1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                X_data.append(np.ones((1,1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
                 #Add the new data to the method
             
-            output_data.append([X_data, self.Protein_concentration[Name_of_target_protein][cell]/\
-                                np.sum(np.array(self.Protein_concentration[Name_of_target_protein])**2)
+            output_data.append([X_data, (self.Protein_concentration[Name_of_target_protein][cell]/\
+                                np.sum(np.array(self.Protein_concentration[Name_of_target_protein])**2))
                                ])
         
         return(output_data)
