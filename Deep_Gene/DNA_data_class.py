@@ -166,7 +166,7 @@ class Organism_data:
         
         @param Name_of_target_protein: str of Name of target protein
         @param list_of_tfs: list of str
-        
+        @max_DNA_length: the maximum length of the DNA
         '''
         
         try:
@@ -175,34 +175,56 @@ class Organism_data:
             print('Error, protein not found')
         
         for i in list_of_tfs: #First check that all TF is stored
-            
             try: 
-                    
-                self.Protein_concentration[i]
-                    
+                self.Protein_concentration[i]   
             except: 
-                    
                 print('Error, protein not found')
-                    
+        
+        if max_DNA_length is not None:
+            if max_DNA_length < self.DNA_length:
+                print('Error, max_DNA_length is smaller than DNA length')
+        
+        
         output_data = []
         
-        for cell in range(self.No_of_cells):
-        
-            X_data = [np.expand_dims(self.DNA_value,1)] #Dependent variable 
-        
-            for i in list_of_tfs: 
+        if max_DNA_length is None:
             
-                X_data.append(np.ones((1,1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
-                #Add the new data to the method
+            for cell in range(self.No_of_cells):
+        
+                X_data = [np.expand_dims(self.DNA_value,1)] #Dependent variable 
+        
+                for i in list_of_tfs: 
             
-            output_data.append([X_data, (self.Protein_concentration[Name_of_target_protein][cell]/\
-                                np.sum(np.array(self.Protein_concentration[Name_of_target_protein])**2))
-                               ])
+                    X_data.append(np.ones((1,1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                    #Add the new data to the method
+            
+                output_data.append([X_data, (self.Protein_concentration[Name_of_target_protein][cell]/\
+                                    np.sum(np.array(self.Protein_concentration[Name_of_target_protein])**2))\
+                                   ])
+        else:
+            
+            for cell in range(self.No_of_cells):
+        
+                DNA_value_with_zeros = np.concatenate([self.DNA_value, np.zeros((1,(max_DNA_length-self.DNA_length)\
+                                                                                ,4,1))],axis = 1)
+                    
+                X_data = [np.expand_dims(DNA_value_with_zeros,1)] #Dependent variable 
+                
+                
+        
+                for i in list_of_tfs: 
+            
+                    X_data.append(np.ones((1,1,max_DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                    #Add the new data to the method
+            
+                output_data.append([X_data, (self.Protein_concentration[Name_of_target_protein][cell]/\
+                                    np.sum(np.array(self.Protein_concentration[Name_of_target_protein])**2))\
+                                   ])
         
         return(output_data)
         
     
-    def test_data_build(self,list_of_tfs, mode = ''):
+    def test_data_build(self,list_of_tfs, max_DNA_length = None,  mode = ''):
         '''
         This function builds the test data from the Organism
         
@@ -218,26 +240,37 @@ class Organism_data:
         
         '''
         for i in list_of_tfs: #First check that all TF is stored
-            
             try: 
-                    
-                self.Protein_concentration[i]
-                    
+                self.Protein_concentration[i]   
             except: 
-                    
                 print('Error, protein not found')
                     
+                    
         output_data = []
+        if max_DNA_length is None:
+            for cell in range(self.No_of_cells):
         
-        for cell in range(self.No_of_cells):
+                X_data = [np.expand_dims(self.DNA_value,1)] #Dependent variable 
         
-            X_data = [self.DNA_value] #Dependent variable 
-        
-            for i in list_of_tfs: 
+                for i in list_of_tfs: 
             
-                X_data.append(np.ones((1,self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                    X_data.append(np.ones((1,1, self.DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
                 #Add the new data to the method
             
-            output_data.append(X_data)
+                output_data.append(X_data)
+        else:
+            for cell in range(self.No_of_cells):
+        
+                DNA_value_with_zeros = np.concatenate([self.DNA_value, np.zeros((1,(max_DNA_length-self.DNA_length)\
+                                                                                ,4,1))],axis = 1)
+                    
+                X_data = [np.expand_dims(DNA_value_with_zeros,1)] #Dependent variable 
+        
+                for i in list_of_tfs: 
+            
+                    X_data.append(np.ones((1,1,max_DNA_length,1,1),dtype='float64')*self.Protein_concentration[i][cell])
+                #Add the new data to the method
+            
+                output_data.append(X_data)
         
         return(output_data)
