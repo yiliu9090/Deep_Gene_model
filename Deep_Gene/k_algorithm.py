@@ -8,7 +8,6 @@ from tensorflow.keras.constraints import Constraint, non_neg,NonNeg
 from tensorflow.keras.initializers import RandomUniform,Constant
 from tensorflow.keras import regularizers
 from tensorflow.keras import backend as K
-
 '''
 First, I need to build a K-cell. Which does one step kenneth algorithm in one direction I will compute this will extremely 
 
@@ -81,8 +80,8 @@ class K_cell(tf.keras.layers.Layer):
         
         bsize_zrange = tf.concat([tf.expand_dims(batch_size,0), tf.constant([self.Z_range,1], dtype=tf.dtypes.int32)],axis = 0)
         bsize_crange = tf.concat([tf.expand_dims(batch_size,0), tf.constant([1, self.cooperativity_range], dtype=tf.dtypes.int32)],axis = 0)
-        Initial = (tf.constant(np.ones(bsize_zrange),dtype = tf.dtypes.float64),\
-                   tf.constant(np.zeros(bsize_crange),dtype = tf.dtypes.float64))
+        Initial = (tf.ones(bsize_zrange,dtype = tf.dtypes.float64),\
+                   tf.zeros(bsize_crange,dtype = tf.dtypes.float64))
         self.add_shapes = (batch_size, padding_add_shapes[0], padding_add_shapes[1])
         return Initial
     
