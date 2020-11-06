@@ -61,11 +61,15 @@ class K_cell(tf.keras.layers.Layer):
         self.cooperativity_initial_matrix = cooperativity_initial_matrix
         self.Num_of_cooperativities = tf.shape(cooperativity_initial_matrix).numpy()[0]
         
-        self.cooperativity_range_matrix = cooperativity_range_matrix
+
         
-        self.combine_cooperativity = combine_cooperativity
+        self.cooperativity_range_matrix = cooperativity_range_matrix
+        self.cooperativity_range = tf.shape(cooperativity_range_matrix).numpy()[1]
         
         self.add_shapes = padding_add_shapes
+        self.Z_range = tf.shape(cooperativity_range_matrix).numpy()[1] + padding_add_shapes[1]
+        
+        self.combine_cooperativity = combine_cooperativity
         
         self.non_cooperativity_matrix = non_cooperativity_matrix
         self.state_size = [tf.TensorShape((None,)),tf.TensorShape((None,))]
@@ -74,8 +78,8 @@ class K_cell(tf.keras.layers.Layer):
         super(K_cell, self).__init__(**kwargs)
     
     def get_initial_state(self, inputs , batch_size , dtype=tf.dtypes.float64):
-        Initial = (tf.constant(np.ones((batch_size,74,1)),dtype = tf.dtypes.float64),\
-                   tf.constant(np.zeros((batch_size,1,60)),dtype = tf.dtypes.float64))
+        Initial = (tf.constant(np.ones((batch_size.numpy(),self.Z_range,1)),dtype = tf.dtypes.float64),\
+                   tf.constant(np.zeros((batch_size.numpy(),1,self.cooperativity_range)),dtype = tf.dtypes.float64))
         self.add_shapes = (batch_size, padding_add_shapes[0], padding_add_shapes[1])
         return Initial
     
@@ -98,7 +102,7 @@ class K_cell(tf.keras.layers.Layer):
 
    
     
-    def call(self, inputs, states, constants):
+    def call(self, inputs, states):
         # inputs should be in [(batch, bcd, cad, ....)]
         # state should be in shape [(batch, Zs), (batch, bcd) (batch, cad) ....]
         '''
@@ -106,9 +110,7 @@ class K_cell(tf.keras.layers.Layer):
         '''
         
         Z, TF_concentrations_saved  = tf.nest.flatten(states)
-    
-        
-        
+
         
         '''
         Inputwise, there is only input which is a list 
@@ -156,12 +158,12 @@ class K_cell(tf.keras.layers.Layer):
         The output should be a matrix with (number of cooperativity relationships) rows and 1 column
         '''
         TF_multiply = tf.math.multiply(TF_concentrations_saved, self.cooperativity_range_matrix)
+
         '''
         Now, we add some zeros to the front of the cooperativity range matrix to ensure that it will correspond to the 
         right value on the Z axis.
         '''
         TF_multiply_add = tf.concat([tf.zeros(self.add_shapes,dtype =tf.dtypes.float64 ), TF_multiply],2 )
-
         '''
         ***Currently, this means that the TF actor that have cooperativity must be of same size *** 
         ***since different size will mean that some of rows have to be rolled ***
@@ -205,7 +207,10 @@ class K_cell(tf.keras.layers.Layer):
         Compute Z
         '''
         
+  
+        
         Z_new = tf.expand_dims(Z[:,0,:],-1) + Zc_sum +  Z_nc_sum
+        
 
         '''
         output (Zc, Znc)
@@ -219,11 +224,12 @@ class K_cell(tf.keras.layers.Layer):
 
         Z = tf.concat([Z_new, Z[:,:-1]], 1)
 
+        
+        #Z = tf.transpose(Z)
         '''
         
         
         '''
-        #print('third Concat')
         TF_concentrations_new = tf.concat([cooperativity_TF, TF_concentrations_saved[:,:,:-1]],2)
         #update Z and update TF_concentration_saved
         state = (Z, TF_concentrations_new) #continued
