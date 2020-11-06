@@ -9,7 +9,6 @@ from tensorflow.keras.initializers import RandomUniform,Constant
 from tensorflow.keras import regularizers
 from tensorflow.keras import backend as K
 
-
 '''
 First, I need to build a K-cell. Which does one step kenneth algorithm in one direction I will compute this will extremely 
 
@@ -27,10 +26,10 @@ class K_cell(tf.keras.layers.Layer):
     '''
 
     def __init__(self,\
-                 cooperativity_initial_matrix,\
-                 cooperativity_range_matrix, \
-                 padding_add_shapes,combine_cooperativity, \
-                 non_cooperativity_matrix,\
+                 cooperativity_initial_matrix = None,\
+                 cooperativity_range_matrix = None, \
+                 padding_add_shapes = None,combine_cooperativity = None, \
+                 non_cooperativity_matrix = None,\
                  **kwargs):
 
         '''
@@ -65,18 +64,25 @@ class K_cell(tf.keras.layers.Layer):
         self.cooperativity_range_matrix = cooperativity_range_matrix
         
         self.combine_cooperativity = combine_cooperativity
+        
         self.add_shapes = padding_add_shapes
         
         self.non_cooperativity_matrix = non_cooperativity_matrix
         self.state_size = [tf.TensorShape((None,)),tf.TensorShape((None,))]
-        self.output_size = [tf.TensorShape((9,1)),tf.TensorShape((9,1))]
+        self.output_size = [tf.TensorShape((None,1,None,)),tf.TensorShape((None,1,None,))]
         
         super(K_cell, self).__init__(**kwargs)
     
+    def get_initial_state(self, inputs , batch_size , dtype=tf.dtypes.float64):
+        Initial = (tf.constant(np.ones((batch_size,74,1)),dtype = tf.dtypes.float64),\
+                   tf.constant(np.zeros((batch_size,1,60)),dtype = tf.dtypes.float64))
+        self.add_shapes = (batch_size, padding_add_shapes[0], padding_add_shapes[1])
+        return Initial
     
     def build(self,input_shape):
         
         il = input_shape
+
         '''
         We need to figure out what 
          # expect input_shape to contain 2 items, [(batch, i1), (batch, i2, i3)]
@@ -90,22 +96,47 @@ class K_cell(tf.keras.layers.Layer):
                                           trainable=True,
                                           dtype='float64')
 
-
+   
     
-    def call(self,inputs, states):
+    def call(self, inputs, states, constants):
         # inputs should be in [(batch, bcd, cad, ....)]
         # state should be in shape [(batch, Zs), (batch, bcd) (batch, cad) ....]
         '''
         There are two states that is outputed [(batch, Z), (batch, saved concentration in a matrix form)]
         '''
-        Z = states[0]
         
-        TF_concentrations_saved = states[1]
+        Z, TF_concentrations_saved  = tf.nest.flatten(states)
+    
+        
+        
         
         '''
         Inputwise, there is only input which is a list 
         '''
-        current_TF_concentration = inputs[0]
+        current_TF_concentration = inputs
+
+        '''
+        Start computing Z non-cooperativity
+        '''
+        
+        '''
+        Here we compute the backward Z in this case
+        '''
+        Z_nc_past = tf.linalg.matmul(self.non_cooperativity_matrix,Z)
+        
+        '''
+        Compute TF concentration of the past
+        '''
+        
+        Znc_by_TF = current_TF_concentration*Z_nc_past
+
+        
+
+        '''
+        Sum it up to get Z non_cooperativity 
+        '''
+        Z_nc_sum =tf.math.reduce_sum(Znc_by_TF,axis=1,keepdims=True)
+        #####################################non-cooperativity is done! ###############################
         
         '''
         Start computing Z Cooperativity ***This feature has not fully realize yet***
@@ -114,7 +145,6 @@ class K_cell(tf.keras.layers.Layer):
         '''
 
         cooperativity_TF = tf.linalg.matmul(self.cooperativity_initial_matrix, current_TF_concentration)
-        
         '''
         The matrix self.cooperativity_initial_matrix should be a tf.constant() matrix. 
         
@@ -126,13 +156,12 @@ class K_cell(tf.keras.layers.Layer):
         The output should be a matrix with (number of cooperativity relationships) rows and 1 column
         '''
         TF_multiply = tf.math.multiply(TF_concentrations_saved, self.cooperativity_range_matrix)
-        
         '''
         Now, we add some zeros to the front of the cooperativity range matrix to ensure that it will correspond to the 
         right value on the Z axis.
         '''
-        TF_multiply_add = tf.concat([tf.zeros(self.add_shapes,dtype =tf.dtypes.float64 ), TF_multiply],1 )
-        
+        TF_multiply_add = tf.concat([tf.zeros(self.add_shapes,dtype =tf.dtypes.float64 ), TF_multiply],2 )
+
         '''
         ***Currently, this means that the TF actor that have cooperativity must be of same size *** 
         ***since different size will mean that some of rows have to be rolled ***
@@ -162,71 +191,51 @@ class K_cell(tf.keras.layers.Layer):
         '''
         In case that a TF cooperatively binds to multiple TF.
         '''
-        #print(Zc_individual_cooperativity)
+
         Zc_by_TF = tf.linalg.matmul(self.combine_cooperativity, Zc_individual_cooperativity)
-        
+
         '''
         Compute Zc 
         '''
-        Zc_sum =tf.math.reduce_sum(Zc_by_TF,keepdims=True)
+        Zc_sum =tf.math.reduce_sum(Zc_by_TF,axis=1,keepdims=True)
         
+       
         ################################################## Cooperativity Done #################################
-        '''
-        Start computing Z non-cooperativity
-        '''
-        
-        '''
-        Here we compute the backward Z in this case
-        '''
-        Z_nc_past = tf.linalg.matmul(self.non_cooperativity_matrix,Z)
-     
-        '''
-        Compute TF concentration of the past
-        '''
-        
-        Znc_by_TF = current_TF_concentration*Z_nc_past
-        
-        
-
-        '''
-        Sum it up to get Z non_cooperativity 
-        '''
-        Z_nc_sum =tf.math.reduce_sum(Znc_by_TF,keepdims=True)
-        
-        #####################################non-cooperativity is done! ###############################
-        
         '''
         Compute Z
         '''
-        Z_new = Z[0,0] + Zc_sum +  Z_nc_sum
+        
+        Z_new = tf.expand_dims(Z[:,0,:],-1) + Zc_sum +  Z_nc_sum
+
         '''
         output (Zc, Znc)
         '''
         
-        output = (Zc_by_TF,Znc_by_TF)
+        output = (Zc_by_TF ,Znc_by_TF)
         
         '''
         compute TF 
         '''
-        Z = K.concatenate([Z_new, tf.transpose(Z[:-1])])
-        
-        Z = tf.transpose(Z)
-        '''
-        
-        '''
 
-        TF_concentrations_new = tf.concat([cooperativity_TF, TF_concentrations_saved[:,:-1]],1)
+        Z = tf.concat([Z_new, Z[:,:-1]], 1)
+
+        '''
+        
+        
+        '''
+        #print('third Concat')
+        TF_concentrations_new = tf.concat([cooperativity_TF, TF_concentrations_saved[:,:,:-1]],2)
         #update Z and update TF_concentration_saved
         state = (Z, TF_concentrations_new) #continued
-        Zc_by_TF = tf.expand_dims(Zc_by_TF,0)
-        Znc_by_TF = tf.expand_dims(Znc_by_TF,0)
+        Zc_by_TF = Zc_by_TF
+        Znc_by_TF = Znc_by_TF
         output = (Zc_by_TF,Znc_by_TF)
 
-        
+        #print(Znc_by_TF)
         return (output, state)
     
+
     
     def get_config(self):
         
         return {}
-    
