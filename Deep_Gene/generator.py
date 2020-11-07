@@ -324,13 +324,9 @@ class Organism_models:
         
         K_RNN = tf.keras.layers.RNN(KCell, return_sequences =True, time_major =False,return_state= True)
 
-        Code_build += 'f_data =K_RNN(inputs =binding_data, initial_state =\
-        [tf.ones(('+ str(2*self.cooperativity_max_range -self.max_range )+','+ str(len(self.cooperativity_relationships))+'),dtype = tf.dtypes.float64),\
-        tf.zeros(('+ str(len(self.cooperativity_relationships))+','+ str(self.cooperativity_max_range)+'),dtype = tf.dtypes.float64)])\n'
+        Code_build += 'f_data =K_RNN(inputs =binding_data)\n'
         
-        Code_build += 'f_reverse =K_RNN(inputs =binding_data_back, initial_state =\
-        [tf.ones(('+ str(2*self.cooperativity_max_range -self.max_range )+','+ str(len(self.cooperativity_relationships))+'),dtype = tf.dtypes.float64),\
-        tf.zeros(('+ str(len(self.cooperativity_relationships))+','+ str(self.cooperativity_max_range)+'),dtype = tf.dtypes.float64)])\n'
+        Code_build += 'f_reverse =K_RNN(inputs =binding_data_back)\n'
         
         Code_build += 'f_reverse_nold = tf.reverse(f_reverse[0][1],[1])\n'
         #
@@ -357,7 +353,8 @@ class Organism_models:
             Code_build = Code_build[:-1]
             Code_build += '],axis = -2, name = "f_c")\n'
         
-        Code_build += 'f_s = (f_data[0][0]*f_reverse_n+ f_data[0][1]*f_reverse_c + f_data[0][1]*f_reverse_n)/(f_data[1][0]*binding_data_greater)\n'
+        Code_build += 'E = tf.expand_dims(tf.expand_dims(f_data[1][:,0],-1),-1)\n'
+        Code_build += 'f_s = (f_data[0][0]*f_reverse_n+ f_data[0][1]*f_reverse_c + f_data[0][1]*f_reverse_n)/(E*binding_data_greater)\n'
         Code_build += 'f_s = tf.clip_by_value(f_s,clip_value_min= 0, clip_value_max = 0.9999999) \n'
         self.protein_position_model = self.protein_positions.copy()
         current_max_value = max(self.protein_position_model.values())
@@ -375,7 +372,7 @@ class Organism_models:
                     Code_build = Code_build[:-1] + '],'
                     Code_build += 'acted_index = ['+ str(self.protein_position_model[i.acted]) + '])\n'
                     Code_build += i.acted +'c =' + i.acted +'_coactivation (f_s)\n'
-                    Code_build += i.acted +'q = f_s[:,:,' + str(self.protein_position_model[i.acted]) +',:] - '+ i.acted + 'c\n'
+                    Code_build += i.acted +'q = tf.expand_dims(f_s[:,:,' + str(self.protein_position_model[i.acted]) +',:], axis = 2) - '+ i.acted + 'c\n'
                     Code_build += 'f_s = tf.concat([f_s,'+ i.acted+'c' + ',' + i.acted +'q' +'], axis = 2)\n'
                     for j in i.output_name:
                         self.protein_position_model[j] = num_protein_track
@@ -438,18 +435,52 @@ class Organism_models:
     
     def build_fit_data(self, data):
         
-        Data = Trial_organism.build_training_data(data)
+        '''
+        This is for fitting the data
+        '''
+        
+        
+        protein_list = list(self.protein_positions)
+            
+        
+        if type(data)== type([]):
+            
+            DNA_length = []
+            
+            training_data = []
+            
+            for i in data:
+                
+                DNA_length.append(i.DNA_length)
+            
+            
+            max_DNA_length = max(DNA_length)
+            
+            for i in data:
+                
+                training_data += i.training_data_build(self.target ,protein_list, max_DNA_length,  mode = '')
+        else:
+                
+            training_data = data.training_data_build(self.target ,protein_list, mode = '')
+            
+
         Y = []
         X = []
+        
         if type(data)== type([]):
-            size = len(Data[0].Protein_concentration)
-        else:
-            size = len(Data.Protein_concentration)
             
-        for i in Data:
+            size = len(protein_list)
+        else:
+            size = len(protein_list)
+            
+        for i in training_data:
+            
             for j in range(len(i[0])):
-                if len(X)< size:
+                
+                if len(X)<= size:
+                    
                     if j == 0:
+                        
                         X.append([i[0][j][0]])
                     else:
                         X.append(i[0][j])
@@ -459,10 +490,13 @@ class Organism_models:
                         X[j].append(i[0][j][0])
                     else:
                         X[j] = np.concatenate((X[j],i[0][j]))
+                        
             Y.append([[i[1]]])
 
         Y = np.array(Y)
+        
         for j in range(len(X)):
+            
             X[j] = np.array(X[j])
             
         return X, Y 
@@ -524,6 +558,9 @@ class Organism_models:
                     
                 
                 
+                
+                
+            
                 
                 
             
