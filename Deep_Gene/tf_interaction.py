@@ -59,6 +59,7 @@ class TF_short_range_interactions(tf.keras.layers.Layer):
         f_{new} =  f_{B} exp(- sum d_i log(1-E_A f_A))
         '''
         actors = tf.gather(inputs,indices = self.actor_indices , axis = 2)
+        
         acted  = tf.gather(inputs,indices = self.acted_index ,axis = 2)
 
         ef_A = tf.math.log( 1.0 - self.kernel*actors) 
@@ -71,6 +72,15 @@ class TF_short_range_interactions(tf.keras.layers.Layer):
         ef_acted = acted*(1-tf.math.exp(ef_kernel))
         
         return ef_acted
+    
+    def get_config(self):
+        
+        return { 'Interaction_type':self.interaction_type, #accepts 'quenching', 'coactivation'
+                 'Interactions_kernel':self.interaction_kernel, #for convolution 
+                 'padding':self.padding_left_right,
+                 'actor_indices':self.actor_indices, # (a,b) a beginning and b ending 
+                 'actors_size':self.actors_size,
+                 'acted_index':self.acted_index}
         
     
 class TF_long_range_interactions(tf.keras.layers.Layer):
@@ -106,6 +116,13 @@ class TF_long_range_interactions(tf.keras.layers.Layer):
         ef_A = self.sign*tf.math.reduce_sum(self.kernel*actors, axis=1)
         
         return ef_A
+        
+    def get_config(self):
+        
+        return { 'Interaction_type':self.interaction_type, #accepts 'quenching', 'coactivation'
+                 'actor_indices':self.actor_indices, # (a,b) a beginning and b ending 
+                 'actors_size':self.actors_size,
+                 'sign':self.sign}
 
 class Enhancer_competition(tf.keras.layers.Layer):
     '''
@@ -159,4 +176,15 @@ class Enhancer_competition(tf.keras.layers.Layer):
         
         R_total = K.sum(T*R_malpha,keepdims=True) 
         
-        return R_total        
+        return R_total
+    
+    def get_config(self):
+        
+        return { 'Interaction_type':self.interaction_type, #accepts 'quenching', 'coactivation'
+                 'Interactions_kernel':self.interaction_kernel, #for convolution 
+                 'padding':self.padding_left_right,
+                 'actor_indices':self.actor_indices, # (a,b) a beginning and b ending 
+                 'actors_size':self.actors_size,
+                 'sign':self.sign, 
+                 'alpha':self.alpha,
+                 'cnn_kernel':self.cnn_kernel}
