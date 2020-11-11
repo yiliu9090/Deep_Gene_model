@@ -89,8 +89,8 @@ class K_cell(tf.keras.layers.Layer):
         bsize_zrange = tf.concat([tf.expand_dims(batch_size,0), tf.constant([self.Z_range,1], dtype=tf.dtypes.int32)],axis = 0)
         bsize_crange = tf.concat([tf.expand_dims(batch_size,0), tf.constant([1, self.cooperativity_range], dtype=tf.dtypes.int32)],axis = 0)
 
-        Initial = (tf.ones(bsize_zrange,dtype = tf.dtypes.float32)*(10**(-15)),\
-                   tf.zeros(bsize_crange,dtype = tf.dtypes.float32))
+        Initial = (tf.ones(bsize_zrange,dtype = tf.dtypes.float64),\
+                   tf.zeros(bsize_crange,dtype = tf.dtypes.float64))
         return Initial
     
     def build(self,input_shape):
@@ -108,7 +108,7 @@ class K_cell(tf.keras.layers.Layer):
                                           initializer=RandomUniform(minval=0, maxval=5, seed=None),
                                           constraint = NonNeg(),
                                           trainable=True,
-                                          dtype='float32')
+                                          dtype='float64')
 
    
     
@@ -182,7 +182,7 @@ class K_cell(tf.keras.layers.Layer):
         right value on the Z axis.
         '''
         
-        TF_multiply_add = tf.concat([tf.zeros(add_shapes,dtype =tf.dtypes.float32 ), TF_multiply],2 )
+        TF_multiply_add = tf.concat([tf.zeros(add_shapes,dtype =tf.dtypes.float64 ), TF_multiply],2 )
         #print('First Concat Done')
         '''
         ***Currently, this means that the TF actor that have cooperativity must be of same size *** 
@@ -230,8 +230,6 @@ class K_cell(tf.keras.layers.Layer):
         #print(Zc_sum)
         
         Z_new = (tf.expand_dims(Z[:,0,:],-1) + Zc_sum +  Z_nc_sum)
-        
-        print(Z_new[0])
         '''
         output (Zc, Znc)
         '''
@@ -270,7 +268,7 @@ class K_cell(tf.keras.layers.Layer):
         'Numofcooperatives':self.Num_of_cooperativities,
         'cooperativity_range_matrix':self.cooperativity_range_matrix,
         'cooperativity_range':self.cooperativity_range,
-        'add_shapes':add_shapes,
+        'add_shapes':self.add_shapes,
         'Z_range':self.Z_range,
         'combine_cooperativity':self.combine_cooperativity,
         'non_cooperativity_matrix':self.non_cooperativity_matrix}
