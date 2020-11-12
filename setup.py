@@ -11,7 +11,7 @@ setuptools.setup(
     description="Deep Gene Project",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="",
+    url="https://github.com/yiliu9090/Deep_Gene_model",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
