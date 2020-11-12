@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="Deep_Gene-yi_liu", # Replace with your own username
+    name="DeepGene", # Replace with your own username
     version="0.1.1",
     author="Yi Liu",
     author_email="yil@uchicago.edu",
