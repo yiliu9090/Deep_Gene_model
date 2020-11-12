@@ -184,11 +184,9 @@ class Enhancer_competition(tf.keras.layers.Layer):
     
     def get_config(self):
         
-        return { 'Interaction_type':self.interaction_type, #accepts 'quenching', 'coactivation'
-                 'Interactions_kernel':self.interaction_kernel, #for convolution 
+        return { 'Interaction_type':self.interaction_type, #accepts 'quenching', 'coactivation' 
                  'padding':self.padding_left_right,
                  'actor_indices':self.actor_indices, # (a,b) a beginning and b ending 
                  'actors_size':self.actors_size,
                  'sign':self.sign, 
-                 'alpha':self.alpha,
-                 'cnn_kernel':self.cnn_kernel}
+                 'alpha':self.alpha}

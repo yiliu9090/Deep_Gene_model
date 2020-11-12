@@ -97,7 +97,7 @@ Trial_organism.model.compile(optimizer='rmsprop', loss='mse', metrics = 'mse')
 
 #The model is compiled and can be fitted. (at the moment one data point at a time batch_size =1 )
 Trial_organism.model.fit(
-    x=X, y=Y, batch_size=1, epochs=10, verbose=1, callbacks=None,
+    x=X, y=Y, batch_size=10, epochs=10, verbose=1, callbacks=None,
     validation_split=0.2, validation_data=None, shuffle=True, class_weight=None,
     sample_weight=None, initial_epoch=0, steps_per_epoch=None,
     validation_steps=2, validation_batch_size=None, validation_freq=1,
