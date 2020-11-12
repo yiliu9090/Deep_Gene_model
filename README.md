@@ -1,4 +1,4 @@
-# Deep Gene model
+# Deep Gene model (Beta)
 ## Introduction: 
 
 Deep Gene is a coding project that I want to embark on for large scale computational study of Transcription Model using Deep Neural Network. This project comes after I have decided to work on the paper 'Fully Interpretable Deep Learning Model of Transcriptional Control' which is published in ISMB and Bioinformics.  The full purpose of Deep Gene is to design a code that automatically generates transcription control DNNs so that we can conduct ABC style inferences. The backend of this DNN is Tensorflow 2.2.0 (Abadi (2015)).  This is an upgrade from the implementation in Liu, et. (2020) which uses Tensorflow 1.11.0 and Keras 1.0. We will continue to focus on the running and maintainance of Tensorflow in the future. At the moment, this code should be OS independent. 
