@@ -218,7 +218,7 @@ class Organism_data:
                     #Add the new data to the method
             
                 output_data.append([X_data, (self.Protein_concentration[Name_of_target_protein][cell]/\
-                                    np.sum(np.array(self.Protein_concentration[Name_of_target_protein])**2))\
+                                    np.sqrt(np.sum(np.array(self.Protein_concentration[Name_of_target_protein])**2)))\
                                    ])
         
         return(output_data)
