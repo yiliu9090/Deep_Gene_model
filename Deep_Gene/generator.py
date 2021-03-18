@@ -241,16 +241,16 @@ class Organism_models:
             self.non_cooperativity_matrix[i][self.useful_protein[i].footprint-1] = 1. 
         self.non_cooperativity_matrix = tf.constant(self.non_cooperativity_matrix,dtype=tf.dtypes.float64 )
     
-    def build_model(self):
+    def build_model(self, name ='_.py'):
         '''
         Build model code using exec
         
         '''
-        tf.keras.backend.set_floatx("float64")
+        #tf.keras.backend.set_floatx("float64")
         self.check_relationships()
+        pythonFiles = open(name, "w")
         
-        
-        Code_build = 'tf.keras.backend.set_floatx("float64") \nDNA = tf.keras.layers.Input(shape=(1,None,4,1))\n'
+        Code_build = 'tf.keras.mixed_precision.experimental.set_policy("float64") \nDNA = tf.keras.layers.Input(shape=(1,None,4,1))\n'
         protein_order = {}
         num_protein_track = 0
         #setup input
@@ -362,9 +362,16 @@ class Organism_models:
             if i.rtype != 'cooperativity':
                 if i.rtype == 'coactivation':
                     Code_build += i.acted + "range_coactivation ="+ str(i.properties['range']) + "\n"
-                    Code_build += i.acted + "coactivation_convolution_kernel = tf.ones(("+i.acted + "range_coactivation*2+1," + str(len(i.actors)) + ",1,1), dtype=tf.dtypes.float64)\n"
                     
+                    Code_build +=  "coactivation_convolution_kernel_pre = np.ones(("+i.acted + "range_coactivation*2+1,"\
+                    + str(len(i.actors)) + ",1,1))\n"
+                    if 'slope' in i.properties.keys():
+                        
+                        Code_build += "slope =  np.cumsum(np.ones(("+str(i.properties['slope'])+","+ str(len(i.actors)) + ",1,1))/"\
+                        +str(i.properties['slope'])+ ", axis = 0)\n"
+                        Code_build += "coactivation_convolution_kernel_pre = np.concatenate((slope, coactivation_convolution_kernel_pre, np.flip(slope,0)), axis = 0)\n"
                     
+                    Code_build += i.acted +"coactivation_convolution_kernel = tf.constant(coactivation_convolution_kernel_pre, dtype=tf.dtypes.float64)\n"
                     Code_build += i.acted +'_coactivation = tf_int.TF_short_range_interactions(interaction_type = "Coactivation",' 
                     Code_build += 'interaction_kernel =' + i.acted +'coactivation_convolution_kernel,actor_indices = ['
                     for j in i.actors:
@@ -380,8 +387,16 @@ class Organism_models:
                         
                 if i.rtype =='quenching':
                     Code_build += i.acted + "range_quenching ="+ str(i.properties['range']) + "\n"
-                    Code_build += i.acted + "quenching_convolution_kernel = tf.ones(("+i.acted + "range_quenching*2+1," + str(len(i.actors)) + ",1,1), dtype=tf.dtypes.float64)\n"
+                    Code_build += "quenching_convolution_kernel_pre = np.ones(("+i.acted + "range_quenching*2+1,"\
+                    + str(len(i.actors)) + ",1,1))\n"
                     
+                    if 'slope' in i.properties.keys():
+                        Code_build += "slope =  np.cumsum(np.ones(("+str(i.properties['slope'])+","+ str(len(i.actors)) + ",1,1))/"\
+                        +str(i.properties['slope'])+ ", axis = 0)\n"
+                        
+                        Code_build += "quenching_convolution_kernel_pre = np.concatenate((slope, quenching_convolution_kernel_pre, np.flip(slope,0)), axis = 0)\n"
+                    
+                    Code_build += i.acted +"quenching_convolution_kernel = tf.constant(quenching_convolution_kernel_pre, dtype=tf.dtypes.float64)\n"
                     
                     Code_build += i.acted +'_quenching = tf_int.TF_short_range_interactions(interaction_type = "Quenching",' 
                     Code_build += 'interaction_kernel =' + i.acted +'quenching_convolution_kernel,actor_indices = ['
@@ -412,6 +427,7 @@ class Organism_models:
         Code_build += final_line
         #print(Code_build)
         exec(Code_build)
+        pythonFiles.write(Code_build)
         self.model_built = True
         
     def build_training_data(self, data):
@@ -454,7 +470,7 @@ class Organism_models:
                 DNA_length.append(i.DNA_length)
             
             
-            max_DNA_length = max(DNA_length)
+            max_DNA_length = max(DNA_length)+ 40
             
             for i in data:
                 
@@ -555,14 +571,5 @@ class Organism_models:
                 for j in training_data:
                     
                     self.model.train_on_batch(x=j[0], y=np.array([[j[1]]]))
-                    
-                
-                
-                
-                
-            
 
    
-
-                
-            
