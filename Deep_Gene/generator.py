@@ -43,7 +43,7 @@ class Organism_models:
         #self.standardize_protein() #adjustments 
     
     def check_protein_type(self):
-        for i in proteins: 
+        for i in self.proteins: 
             if(type(i) != type(tpwm.TF_PWM())):
                 raise NameError('not a Protein')
     def get_protein_name(self):
